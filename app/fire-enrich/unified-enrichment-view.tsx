@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/shared/button/button";
 import Input from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -28,7 +28,6 @@ import { generateVariableName } from "@/lib/utils/field-utils";
 import { X, Plus, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface UnifiedEnrichmentViewProps {
   rows: CSVRow[];
@@ -148,10 +147,8 @@ export function UnifiedEnrichmentView({
   // Safety check for undefined props
   if (!rows || !columns || !Array.isArray(rows) || !Array.isArray(columns)) {
     return (
-      <div className="text-center p-8">
-        <p className="text-muted-foreground">
-          No data available. Please upload a CSV file.
-        </p>
+      <div className="center text-body-medium text-black-alpha-64">
+        <p>No data available. Please upload a CSV file.</p>
       </div>
     );
   }
@@ -252,13 +249,13 @@ export function UnifiedEnrichmentView({
   const visibleFields = selectedFields.slice(startFieldIndex);
 
   return (
-    <div className="space-y-6">
+    <div className="stack space-y-8">
       {/* Table Preview at the top */}
       <div className="w-full">
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="overflow-x-auto rounded-md border border-border-muted bg-white shadow-sm min-w-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-b-2 border-orange-100">
+              <TableRow className="border-b-2">
                 {/* All columns - highlight email column */}
                 {columns.map((col, idx) => {
                   const isEmailCol = col === emailColumn;
@@ -268,12 +265,12 @@ export function UnifiedEnrichmentView({
                       className={cn(
                         "transition-all duration-700 relative",
                         isEmailCol
-                          ? "sticky left-0 z-10 bg-orange-500 text-white font-bold email-column-glow"
-                          : "bg-zinc-50 font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-                        !isEmailCol && step >= 2 && "opacity-30",
+                          ? "gradient-fire text-white font-medium text-label-small heat-glow"
+                          : "bg-background-lighter font-medium text-label-small",
+                        !isEmailCol && step >= 2 && "",
                       )}
                     >
-                      <span>{col}</span>
+                      <span className="text-black-alpha-88">{col}</span>
                     </TableHead>
                   );
                 })}
@@ -283,7 +280,7 @@ export function UnifiedEnrichmentView({
                     <TableHead
                       key={`new-${idx}`}
                       className={cn(
-                        "font-semibold transition-all duration-700 bg-orange-50 text-orange-900 dark:bg-orange-950/20 dark:text-orange-400",
+                        "font-medium transition-all duration-700 bg-heat-12 text-accent-black text-label-small",
                         "animate-in fade-in slide-in-from-right-2",
                       )}
                       style={{
@@ -292,13 +289,15 @@ export function UnifiedEnrichmentView({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-orange-500">✨</span>
-                        <span>{field.displayName}</span>
+                        <Sparkles className="text-heat-100 h-12 w-12" />
+                        <span className="text-black-alpha-88">
+                          {field.displayName}
+                        </span>
                       </div>
                     </TableHead>
                   ))}
                 {step >= 2 && selectedFields.length > maxVisibleFields && (
-                  <TableHead className="text-center text-gray-500 animate-in fade-in duration-700">
+                  <TableHead className="text-center text-black-alpha-56 animate-in fade-in duration-700 text-label-small">
                     +{selectedFields.length - maxVisibleFields} more
                   </TableHead>
                 )}
@@ -319,20 +318,18 @@ export function UnifiedEnrichmentView({
                         <TableCell
                           key={colIdx}
                           className={cn(
-                            "sticky left-0 z-10 bg-orange-50 transition-all duration-700",
-                            "text-zinc-900 dark:bg-orange-950/20 dark:text-zinc-100",
-                            rowIdx === displayRows.length - 1 &&
-                              "email-column-rounded-bottom",
+                            "bg-heat-8 transition-all duration-700",
+                            "text-accent-black",
                           )}
                         >
                           <span
                             className={cn(
-                              "text-sm truncate block max-w-[200px] font-mono font-bold",
+                              "text-mono-small truncate block max-w-[200px] font-mono font-medium",
                               isValidEmail
-                                ? "text-zinc-900 dark:text-zinc-100"
+                                ? "text-accent-black email-valid"
                                 : email
-                                  ? "text-red-600"
-                                  : "text-gray-400",
+                                  ? "text-accent-crimson email-invalid"
+                                  : "text-black-alpha-40 email-empty",
                             )}
                           >
                             {email || "-"}
@@ -345,11 +342,11 @@ export function UnifiedEnrichmentView({
                       <TableCell
                         key={colIdx}
                         className={cn(
-                          "transition-all duration-700 bg-zinc-50/50 dark:bg-zinc-800/50",
-                          step >= 2 && "opacity-30",
+                          "transition-all duration-700 bg-background-base",
+                          step >= 2 && "",
                         )}
                       >
-                        <span className="text-sm truncate block max-w-[150px] text-gray-600">
+                        <span className="text-body-small truncate block min-w-[100px] text-black-alpha-64">
                           {cellValue || "-"}
                         </span>
                       </TableCell>
@@ -369,11 +366,11 @@ export function UnifiedEnrichmentView({
                           animationFillMode: "backwards",
                         }}
                       >
-                        <div className="h-5 rounded-full bg-gradient-to-r from-zinc-200 to-zinc-300 animate-pulse dark:from-zinc-700 dark:to-zinc-600" />
+                        <div className="h-5 rounded-full loading-cell" />
                       </TableCell>
                     ))}
                   {step >= 2 && selectedFields.length > maxVisibleFields && (
-                    <TableCell className="text-center text-gray-400 animate-in fade-in duration-700">
+                    <TableCell className="text-center text-black-alpha-40 animate-in fade-in duration-700">
                       ...
                     </TableCell>
                   )}
@@ -385,7 +382,7 @@ export function UnifiedEnrichmentView({
         {!showAllRows && rows.length > 3 && (
           <button
             onClick={() => setShowAllRows(true)}
-            className="text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 mt-2 font-medium"
+            className="text-body-small text-heat-100 hover:text-accent-crimson mt-3 font-medium transition-colors"
           >
             Show {rows.length - 3} more rows →
           </button>
@@ -393,7 +390,7 @@ export function UnifiedEnrichmentView({
         {showAllRows && (
           <button
             onClick={() => setShowAllRows(false)}
-            className="text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 mt-2 font-medium"
+            className="text-body-small text-heat-100 hover:text-accent-crimson mt-3 font-medium transition-colors"
           >
             Show less
           </button>
@@ -404,31 +401,31 @@ export function UnifiedEnrichmentView({
       <div className="w-full">
         {/* Step 1: Email column selection */}
         {step === 1 && (
-          <div className="space-y-4">
-            <Card className="p-5 border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <h3 className="text-lg font-bold text-[#36322F] dark:text-white">
+          <div className="stack space-y-6">
+            <Card className="p-8 border-border-muted rounded-md">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-6 sm:gap-2">
+                  <h3 className="text-accent-black">
                     {emailColumn
                       ? "Email Column Detected:"
                       : "Select Email Column:"}
                   </h3>
                   {emailColumn ? (
                     <>
-                      <span className="font-mono text-sm bg-orange-100 px-3 py-1 rounded-full border border-orange-300 text-orange-700 dark:bg-orange-900/20 dark:border-orange-700 dark:text-orange-400 font-medium">
+                      <span className="font-mono text-mono-medium bg-heat-12 px-4 py-2 rounded-full border border-heat-40 text-heat-100 font-medium">
                         {emailColumn}
                       </span>
-                      {!showEmailDropdownStep1 && (
+                      {!showEmailDropdown && (
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowEmailDropdownStep1(true)}
-                          className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 px-2 py-1 h-auto"
+                          variant="tertiary"
+                          size="default"
+                          onClick={() => setShowEmailDropdown(true)}
+                          className="text-heat-100 hover:text-accent-crimson hover:bg-white/50 transition-all"
                         >
                           Change
                         </Button>
                       )}
-                      {showEmailDropdownStep1 && (
+                      {showEmailDropdown && (
                         <Select
                           value={emailColumn}
                           onValueChange={(value) => {
@@ -436,12 +433,16 @@ export function UnifiedEnrichmentView({
                             setShowEmailDropdownStep1(false);
                           }}
                         >
-                          <SelectTrigger className="w-48 bg-white border-orange-300 dark:bg-zinc-800 dark:border-orange-700">
-                            <SelectValue />
+                          <SelectTrigger className="h-full w-[200px]">
+                            <SelectValue placeholder="Change" />
                           </SelectTrigger>
-                          <SelectContent className="bg-white dark:bg-zinc-800">
+                          <SelectContent className="bg-white border-border-muted">
                             {columns.map((col) => (
-                              <SelectItem key={col} value={col}>
+                              <SelectItem
+                                key={col}
+                                value={col}
+                                className="text-body-medium"
+                              >
                                 {col}
                               </SelectItem>
                             ))}
@@ -454,12 +455,19 @@ export function UnifiedEnrichmentView({
                       value={emailColumn}
                       onValueChange={(value) => setEmailColumn(value)}
                     >
-                      <SelectTrigger className="w-64 bg-white border-orange-300 dark:bg-zinc-800 dark:border-orange-700">
-                        <SelectValue placeholder="Select email column" />
+                      <SelectTrigger className="h-full w-[150px]">
+                        <SelectValue
+                          placeholder="Email Column"
+                          className="text-body-medium"
+                        />
                       </SelectTrigger>
-                      <SelectContent className="bg-white dark:bg-zinc-800">
+                      <SelectContent className="bg-white border-border-muted">
                         {columns.map((col) => (
-                          <SelectItem key={col} value={col}>
+                          <SelectItem
+                            key={col}
+                            value={col}
+                            className="text-body-medium"
+                          >
                             {col}
                           </SelectItem>
                         ))}
@@ -469,10 +477,10 @@ export function UnifiedEnrichmentView({
                 </div>
 
                 <Button
-                  variant="orange"
+                  variant="primary"
+                  size="default"
                   onClick={() => setStep(2)}
                   disabled={!emailColumn}
-                  className="px-6"
                 >
                   Next
                 </Button>
@@ -500,15 +508,16 @@ export function UnifiedEnrichmentView({
                 if (skippableEmails.length === 0) return null;
 
                 return (
-                  <Alert className="border-orange-200 bg-orange-50 dark:bg-orange-900/10 dark:border-orange-800">
-                    <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                    <AlertDescription className="text-sm text-orange-800 dark:text-orange-200">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-start rounded-md gap-4 p-4 sm:p-8 border border-heat-40 bg-heat-8">
+                    <AlertCircle className="h-10 w-10 sm:h-16 sm:w-16 flex-shrink-0 text-heat-100" />
+
+                    <div className="text-body-small text-accent-black">
                       <strong>{skippableEmails.length} emails</strong> from
                       common providers (Gmail, Yahoo, etc.) will be
                       automatically skipped to save API calls. These are
                       typically personal emails without company information.
-                    </AlertDescription>
-                  </Alert>
+                    </div>
+                  </div>
                 );
               })()}
           </div>
@@ -516,21 +525,21 @@ export function UnifiedEnrichmentView({
 
         {/* Email column info for step 2+ */}
         {step >= 2 && (
-          <div className="mb-4 flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200 dark:bg-orange-950/20 dark:border-orange-900/30">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <div className="mb-8 flex items-center justify-between p-6 bg-heat-8 rounded-md border border-heat-40">
+            <div className="flex items-center gap-4">
+              <span className="text-label-medium text-accent-black">
                 Email Column:
               </span>
-              <span className="font-mono text-sm bg-white px-3 py-1 rounded-full border border-orange-300 text-orange-700 dark:bg-zinc-800 dark:border-orange-700 dark:text-orange-400">
+              <span className="font-mono text-mono-medium bg-white px-4 py-2 rounded-full border border-heat-40 text-heat-100">
                 {emailColumn}
               </span>
             </div>
             {!showEmailDropdown && (
               <Button
-                variant="ghost"
-                size="sm"
+                variant="tertiary"
+                size="default"
                 onClick={() => setShowEmailDropdown(true)}
-                className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
+                className="text-heat-100 hover:text-accent-crimson hover:bg-white/50 transition-all"
               >
                 Change
               </Button>
@@ -543,12 +552,16 @@ export function UnifiedEnrichmentView({
                   setShowEmailDropdown(false);
                 }}
               >
-                <SelectTrigger className="w-48 bg-white border-orange-300 dark:bg-zinc-800 dark:border-orange-700">
-                  <SelectValue />
+                <SelectTrigger className="h-full w-[200px] bg-white">
+                  <SelectValue placeholder="Email Column" />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-zinc-800">
+                <SelectContent className="bg-white border-border-muted">
                   {columns.map((col) => (
-                    <SelectItem key={col} value={col}>
+                    <SelectItem
+                      key={col}
+                      value={col}
+                      className="text-body-medium"
+                    >
                       {col}
                     </SelectItem>
                   ))}
@@ -560,15 +573,15 @@ export function UnifiedEnrichmentView({
 
         {/* Step 2: Field Selection */}
         {step === 2 && (
-          <div className="space-y-4">
-            <Card className="p-4 border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-[#36322F] dark:text-white">
+          <div className="stack space-y-8">
+            <Card className="p-8 border-border-muted bg-white">
+              <div className="flex items-center justify-between mb-8">
+                <p className="text-accent-black">
                   Select fields to enrich ({selectedFields.length}/10)
-                </h3>
+                </p>
                 {/* Selected fields counter */}
                 {selectedFields.length > 0 && (
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-body-small text-black-alpha-64">
                     {selectedFields.length} field
                     {selectedFields.length !== 1 ? "s" : ""} selected
                   </div>
@@ -576,9 +589,11 @@ export function UnifiedEnrichmentView({
               </div>
 
               {/* Preset fields */}
-              <div className="space-y-3 mb-6">
-                <Label>Quick add fields</Label>
-                <div className="flex flex-wrap gap-2">
+              <div className="stack space-y-6 mb-10">
+                <Label className="text-label-large font-medium text-accent-black p-2">
+                  Quick add fields
+                </Label>
+                <div className="flex flex-wrap gap-3">
                   {PRESET_FIELDS.map((field) => {
                     const isSelected = selectedFields.find(
                       (f) => f.name === field.name,
@@ -593,18 +608,18 @@ export function UnifiedEnrichmentView({
                             : handleAddField(field)
                         }
                         className={cn(
-                          "px-2 py-1 text-xs rounded-full transition-all duration-200 font-medium",
+                          "p-4 text-body-small rounded-full transition-all duration-200 font-medium border",
                           isSelected
-                            ? "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
-                            : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700",
+                            ? "bg-accent-black text-white selected"
+                            : "bg-background-lighter text-accent-black hover:bg-heat-8",
                           selectedFields.length >= 10 &&
                             !isSelected &&
                             "opacity-50 cursor-not-allowed",
                         )}
                       >
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-2 px-4">
                           {field.displayName}
-                          {isSelected && <X size={12} />}
+                          {isSelected && <X size={14} />}
                         </span>
                       </button>
                     );
@@ -613,34 +628,37 @@ export function UnifiedEnrichmentView({
               </div>
 
               {/* Add additional fields section */}
-              <div className="border-t pt-6">
-                <Label className="mb-4 block text-base font-semibold">
+              <div className="border-t border-border-muted pt-10">
+                <Label className="mb-8 block text-title-h5 font-medium text-accent-black">
                   Add additional fields
                 </Label>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Natural Language Card */}
-                  <Card className="p-4 border-orange-200 hover:border-orange-300 transition-all duration-300 dark:border-orange-900/30 dark:hover:border-orange-800/50">
+                  <Card className="p-6 border-heat-40 hover:border-heat-100 transition-all duration-300 bg-background-lighter">
                     <Button
-                      variant="ghost"
-                      className="w-full justify-between p-0 hover:bg-transparent"
+                      variant="secondary"
+                      className="w-full justify-between p-0 bg-transparent"
                       onClick={() =>
                         setShowNaturalLanguage(!showNaturalLanguage)
                       }
                     >
-                      <span className="flex items-center gap-2 font-medium">
-                        <Sparkles size={18} className="text-orange-500" />
+                      <span className="flex items-center gap-3 font-medium text-label-large text-accent-black">
+                        <Sparkles size={16} className="text-heat-100" />
                         Add with natural language
                       </span>
                       {showNaturalLanguage ? (
-                        <ChevronUp size={16} />
+                        <ChevronUp size={16} className="text-black-alpha-56" />
                       ) : (
-                        <ChevronDown size={16} />
+                        <ChevronDown
+                          size={16}
+                          className="text-black-alpha-56"
+                        />
                       )}
                     </Button>
 
                     {showNaturalLanguage && (
-                      <div className="mt-4 space-y-3">
+                      <div className="mt-4 stack space-y-4">
                         <Textarea
                           placeholder="Describe the fields you want to add (e.g., 'I need the CEO name, company mission statement, and main product categories')"
                           value={naturalLanguageInput}
@@ -648,16 +666,17 @@ export function UnifiedEnrichmentView({
                             setNaturalLanguageInput(e.target.value)
                           }
                           rows={3}
-                          className="border-orange-200 focus:border-orange-400 dark:border-orange-900/30 dark:focus:border-orange-700"
+                          className="border-heat-40 focus:border-heat-100 bg-white text-body-medium h-72"
                         />
                         <Button
                           onClick={handleGenerateFields}
                           disabled={
                             !naturalLanguageInput.trim() || isGenerating
                           }
-                          variant="orange"
-                          className="w-full"
+                          variant="primary"
+                          className="w-full button button-primary text-label-medium"
                         >
+                          <span className="button-background" />
                           {isGenerating ? "Generating..." : "Generate Fields"}
                         </Button>
                       </div>
@@ -665,25 +684,28 @@ export function UnifiedEnrichmentView({
                   </Card>
 
                   {/* Manual Add Card */}
-                  <Card className="p-4 border-orange-200 hover:border-orange-300 transition-all duration-300 dark:border-orange-900/30 dark:hover:border-orange-800/50">
+                  <Card className="p-6 border-heat-40 hover:border-heat-100 transition-all duration-300 bg-background-lighter">
                     <Button
-                      variant="ghost"
-                      className="w-full justify-between p-0 hover:bg-transparent"
+                      variant="secondary"
+                      className="w-full justify-between p-0 bg-transparent"
                       onClick={() => setShowManualAdd(!showManualAdd)}
                     >
-                      <span className="flex items-center gap-2 font-medium">
-                        <Plus size={18} className="text-orange-500" />
+                      <span className="flex items-center gap-3 font-medium text-label-large text-accent-black">
+                        <Plus size={16} className="text-heat-100" />
                         Add manually
                       </span>
                       {showManualAdd ? (
-                        <ChevronUp size={16} />
+                        <ChevronUp size={16} className="text-black-alpha-56" />
                       ) : (
-                        <ChevronDown size={16} />
+                        <ChevronDown
+                          size={16}
+                          className="text-black-alpha-56"
+                        />
                       )}
                     </Button>
 
                     {showManualAdd && (
-                      <div className="mt-4 space-y-3">
+                      <div className="mt-6 stack space-y-4">
                         <Input
                           placeholder="Field name"
                           value={customField.name}
@@ -693,7 +715,7 @@ export function UnifiedEnrichmentView({
                               name: e.target.value,
                             })
                           }
-                          className="w-full border-orange-200 focus:border-orange-400 dark:border-orange-900/30 dark:focus:border-orange-700"
+                          className="w-full border-heat-40 focus:border-heat-100 bg-white text-body-medium"
                         />
                         <Textarea
                           placeholder="Field description"
@@ -705,7 +727,7 @@ export function UnifiedEnrichmentView({
                             })
                           }
                           rows={2}
-                          className="w-full border-orange-200 focus:border-orange-400 dark:border-orange-900/30 dark:focus:border-orange-700"
+                          className="w-full border-heat-40 focus:border-heat-100 bg-white text-body-medium"
                         />
                         <Select
                           value={customField.type}
@@ -713,21 +735,45 @@ export function UnifiedEnrichmentView({
                             value: "string" | "number" | "boolean" | "array",
                           ) => setCustomField({ ...customField, type: value })}
                         >
-                          <SelectTrigger className="w-full border-orange-200 focus:border-orange-400">
-                            <SelectValue />
+                          <SelectTrigger className="w-full h-32 border-heat-40 focus:border-heat-100">
+                            <SelectValue
+                              className="text-body-medium"
+                              placeholder="Select Type"
+                            />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="string">Text</SelectItem>
-                            <SelectItem value="number">Number</SelectItem>
-                            <SelectItem value="boolean">Boolean</SelectItem>
-                            <SelectItem value="array">List</SelectItem>
+                          <SelectContent className="bg-white border-border-muted">
+                            <SelectItem
+                              value="string"
+                              className="text-body-medium"
+                            >
+                              Text
+                            </SelectItem>
+                            <SelectItem
+                              value="number"
+                              className="text-body-medium"
+                            >
+                              Number
+                            </SelectItem>
+                            <SelectItem
+                              value="boolean"
+                              className="text-body-medium"
+                            >
+                              Boolean
+                            </SelectItem>
+                            <SelectItem
+                              value="array"
+                              className="text-body-medium"
+                            >
+                              List
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <Button
                           onClick={handleAddCustomField}
-                          variant="orange"
-                          className="w-full"
+                          variant="primary"
+                          className="w-full button button-primary text-label-medium"
                         >
+                          <span className="button-background" />
                           Add Field
                         </Button>
                       </div>
@@ -738,33 +784,46 @@ export function UnifiedEnrichmentView({
 
               {/* Suggested fields */}
               {suggestedFields.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <Label>Suggested fields</Label>
+                <div className="mt-8 stack space-y-4">
+                  <Label className="text-label-large font-medium text-accent-black">
+                    Suggested fields
+                  </Label>
                   {suggestedFields.map((field, idx) => (
-                    <Card key={idx} className="p-3">
+                    <Card
+                      key={idx}
+                      className="p-6 border-border-muted bg-background-lighter suggested-field-card"
+                      style={{
+                        animationDelay: `${idx * 100}ms`,
+                        animationFillMode: "backwards",
+                      }}
+                    >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <p className="font-medium">{field.displayName}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="font-medium text-label-medium text-accent-black">
+                            {field.displayName}
+                          </p>
+                          <p className="text-body-small text-black-alpha-64 mt-1">
                             {field.description}
                           </p>
                         </div>
-                        <div className="flex gap-2 ml-4">
+                        <div className="flex gap-3 ml-6">
                           <Button
-                            size="sm"
-                            variant="orange"
+                            size="default"
+                            variant="primary"
                             onClick={() => {
                               handleAddField(field);
                               setSuggestedFields(
                                 suggestedFields.filter((_, i) => i !== idx),
                               );
                             }}
+                            className="button button-primary"
                           >
+                            <span className="button-background" />
                             Accept
                           </Button>
                           <Button
-                            size="sm"
-                            className="bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            size="default"
+                            className="bg-accent-black text-white hover:bg-black-alpha-72"
                             onClick={() =>
                               setSuggestedFields(
                                 suggestedFields.filter((_, i) => i !== idx),
@@ -781,15 +840,14 @@ export function UnifiedEnrichmentView({
               )}
 
               <Button
-                variant="orange"
-                className="w-full mt-6 h-10 text-base"
+                variant="primary"
+                size="large"
+                className="w-full mt-10"
                 onClick={() => onStartEnrichment(emailColumn, selectedFields)}
                 disabled={selectedFields.length === 0}
               >
-                <span className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" />
-                  Start Enrichment
-                </span>
+                <Sparkles className="w-16 h-16" />
+                Start Enrichment
               </Button>
             </Card>
           </div>
