@@ -404,7 +404,7 @@ export default function HomePage() {
       {/*Dialog Input for BYOK*/}
       <Dialog open={showApiKeyModal} onOpenChange={setShowApiKeyModal}>
         <DialogContent
-          className="sm:max-w-md"
+          className="sm:max-w-md rounded-md p-16"
           style={{ backgroundColor: "var(--accent-white)" }}
         >
           <DialogHeader>
@@ -423,7 +423,7 @@ export default function HomePage() {
                   size="default"
                   className="flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-16 w-16" />
                   Get Firecrawl API Key
                 </Button>
                 <div className="flex flex-col gap-2">
@@ -458,7 +458,7 @@ export default function HomePage() {
                   size="default"
                   className="flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-16 w-16" />
                   Get OpenAI API Key
                 </Button>
                 <div className="flex flex-col gap-2">

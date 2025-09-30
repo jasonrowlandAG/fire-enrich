@@ -223,8 +223,8 @@ export function CSVUploader({ onUpload }: CSVUploaderProps) {
             </>
           ) : (
             <>
-              <span>
-                Demo version limited to {FIRE_ENRICH_CONFIG.CSV_LIMITS.MAX_ROWS}{" "}
+              <span className="text-center">
+                Demo version limited to {FIRE_ENRICH_CONFIG.CSV_LIMITS.MAX_ROWS}
                 rows &amp; {FIRE_ENRICH_CONFIG.CSV_LIMITS.MAX_COLUMNS} columns
               </span>
               <span className="text-[10px] opacity-70">
