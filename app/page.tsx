@@ -1,15 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+//Enrich Specific Components
 import { CSVUploader } from "./fire-enrich/csv-uploader";
 import { UnifiedEnrichmentView } from "./fire-enrich/unified-enrichment-view";
 import { EnrichmentTable } from "./fire-enrich/enrichment-table";
 import { CSVRow, EnrichmentField } from "@/lib/types";
-import { FIRE_ENRICH_CONFIG } from "./fire-enrich/config";
+
+// Import shared components
+import HeroFlame from "@/components/shared/effects/flame/hero-flame";
+import { HeaderProvider } from "@/components/shared/header/HeaderContext";
+
+// Import hero section components
+import HomeHeroBackground from "@/components/app/(home)/sections/hero/Background/Background";
+import { BackgroundOuterPiece } from "@/components/app/(home)/sections/hero/Background/BackgroundOuterPiece";
+import HomeHeroBadge from "@/components/app/(home)/sections/hero/Badge/Badge";
+import HomeHeroPixi from "@/components/app/(home)/sections/hero/Pixi/Pixi";
+import HomeHeroTitle from "@/components/app/(home)/sections/hero/Title/Title";
+import HeroScraping from "@/components/app/(home)/sections/hero-scraping/HeroScraping";
+
+// Import header components
+import HeaderBrandKit from "@/components/shared/header/BrandKit/BrandKit";
+import HeaderWrapper from "@/components/shared/header/Wrapper/Wrapper";
+import HeaderDropdownWrapper from "@/components/shared/header/Dropdown/Wrapper/Wrapper";
+import GithubIcon from "@/components/shared/header/Github/_svg/GithubIcon";
+import ButtonUI from "@/components/shared/button/button";
+
+// Ui Imports
+import { toast } from "sonner";
+import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
+import Button from "@/components/shared/button/button";
 import {
   Dialog,
   DialogContent,
@@ -18,21 +41,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import Input from "@/components/ui/input";
 
 export default function HomePage() {
-  const [step, setStep] = useState<'upload' | 'setup' | 'enrichment'>('upload');
+  //enrich-states
+  const [step, setStep] = useState<"upload" | "setup" | "enrichment">("upload");
   const [csvData, setCsvData] = useState<{
     rows: CSVRow[];
     columns: string[];
   } | null>(null);
-  const [emailColumn, setEmailColumn] = useState<string>('');
+  const [emailColumn, setEmailColumn] = useState<string>("");
   const [selectedFields, setSelectedFields] = useState<EnrichmentField[]>([]);
   const [isCheckingEnv, setIsCheckingEnv] = useState(true);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-  const [firecrawlApiKey, setFirecrawlApiKey] = useState<string>('');
-  const [openaiApiKey, setOpenaiApiKey] = useState<string>('');
+  const [firecrawlApiKey, setFirecrawlApiKey] = useState<string>("");
+  const [openaiApiKey, setOpenaiApiKey] = useState<string>("");
   const [isValidatingApiKey, setIsValidatingApiKey] = useState(false);
   const [missingKeys, setMissingKeys] = useState<{
     firecrawl: boolean;
@@ -43,35 +66,35 @@ export default function HomePage() {
     columns: string[];
   } | null>(null);
 
-  // Check environment status on component mount
+  //enrich effect function
   useEffect(() => {
     const checkEnvironment = async () => {
       try {
-        const response = await fetch('/api/check-env');
+        const response = await fetch("/api/check-env");
         if (!response.ok) {
-          throw new Error('Failed to check environment');
+          throw new Error("Failed to check environment");
         }
         const data = await response.json();
         const hasFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
         const hasOpenAI = data.environmentStatus.OPENAI_API_KEY;
-        
+
         if (!hasFirecrawl) {
           // Check localStorage for saved API key
-          const savedKey = localStorage.getItem('firecrawl_api_key');
+          const savedKey = localStorage.getItem("firecrawl_api_key");
           if (savedKey) {
             setFirecrawlApiKey(savedKey);
           }
         }
-        
+
         if (!hasOpenAI) {
           // Check localStorage for saved API key
-          const savedKey = localStorage.getItem('openai_api_key');
+          const savedKey = localStorage.getItem("openai_api_key");
           if (savedKey) {
             setOpenaiApiKey(savedKey);
           }
         }
       } catch (error) {
-        console.error('Error checking environment:', error);
+        console.error("Error checking environment:", error);
       } finally {
         setIsCheckingEnv(false);
       }
@@ -82,14 +105,17 @@ export default function HomePage() {
 
   const handleCSVUpload = async (rows: CSVRow[], columns: string[]) => {
     // Check if we have Firecrawl API key
-    const response = await fetch('/api/check-env');
+    const response = await fetch("/api/check-env");
     const data = await response.json();
     const hasFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
     const hasOpenAI = data.environmentStatus.OPENAI_API_KEY;
-    const savedFirecrawlKey = localStorage.getItem('firecrawl_api_key');
-    const savedOpenAIKey = localStorage.getItem('openai_api_key');
+    const savedFirecrawlKey = localStorage.getItem("firecrawl_api_key");
+    const savedOpenAIKey = localStorage.getItem("openai_api_key");
 
-    if ((!hasFirecrawl && !savedFirecrawlKey) || (!hasOpenAI && !savedOpenAIKey)) {
+    if (
+      (!hasFirecrawl && !savedFirecrawlKey) ||
+      (!hasOpenAI && !savedOpenAIKey)
+    ) {
       // Save the CSV data temporarily and show API key modal
       setPendingCSVData({ rows, columns });
       setMissingKeys({
@@ -99,54 +125,54 @@ export default function HomePage() {
       setShowApiKeyModal(true);
     } else {
       setCsvData({ rows, columns });
-      setStep('setup');
+      setStep("setup");
     }
   };
 
   const handleStartEnrichment = (email: string, fields: EnrichmentField[]) => {
     setEmailColumn(email);
     setSelectedFields(fields);
-    setStep('enrichment');
+    setStep("enrichment");
   };
 
   const handleBack = () => {
-    if (step === 'setup') {
-      setStep('upload');
-    } else if (step === 'enrichment') {
-      setStep('setup');
+    if (step === "setup") {
+      setStep("upload");
+    } else if (step === "enrichment") {
+      setStep("setup");
     }
   };
 
   const resetProcess = () => {
-    setStep('upload');
+    setStep("upload");
     setCsvData(null);
-    setEmailColumn('');
+    setEmailColumn("");
     setSelectedFields([]);
   };
 
   const openFirecrawlWebsite = () => {
-    window.open('https://www.firecrawl.dev', '_blank');
+    window.open("https://www.firecrawl.dev", "_blank");
   };
 
   const handleApiKeySubmit = async () => {
     // Check environment again to see what's missing
-    const response = await fetch('/api/check-env');
+    const response = await fetch("/api/check-env");
     const data = await response.json();
     const hasEnvFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
     const hasEnvOpenAI = data.environmentStatus.OPENAI_API_KEY;
-    const hasSavedFirecrawl = localStorage.getItem('firecrawl_api_key');
-    const hasSavedOpenAI = localStorage.getItem('openai_api_key');
-    
+    const hasSavedFirecrawl = localStorage.getItem("firecrawl_api_key");
+    const hasSavedOpenAI = localStorage.getItem("openai_api_key");
+
     const needsFirecrawl = !hasEnvFirecrawl && !hasSavedFirecrawl;
     const needsOpenAI = !hasEnvOpenAI && !hasSavedOpenAI;
 
     if (needsFirecrawl && !firecrawlApiKey.trim()) {
-      toast.error('Please enter a valid Firecrawl API key');
+      toast.error("Please enter a valid Firecrawl API key");
       return;
     }
-    
+
     if (needsOpenAI && !openaiApiKey.trim()) {
-      toast.error('Please enter a valid OpenAI API key');
+      toast.error("Please enter a valid OpenAI API key");
       return;
     }
 
@@ -155,165 +181,237 @@ export default function HomePage() {
     try {
       // Test the Firecrawl API key if provided
       if (firecrawlApiKey) {
-        const response = await fetch('/api/scrape', {
-          method: 'POST',
+        const response = await fetch("/api/scrape", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-Firecrawl-API-Key': firecrawlApiKey,
+            "Content-Type": "application/json",
+            "X-Firecrawl-API-Key": firecrawlApiKey,
           },
-          body: JSON.stringify({ url: 'https://example.com' }),
+          body: JSON.stringify({ url: "https://example.com" }),
         });
 
         if (!response.ok) {
-          throw new Error('Invalid Firecrawl API key');
+          throw new Error("Invalid Firecrawl API key");
         }
-        
+
         // Save the API key to localStorage
-        localStorage.setItem('firecrawl_api_key', firecrawlApiKey);
-      }
-      
-      // Save OpenAI API key if provided
-      if (openaiApiKey) {
-        localStorage.setItem('openai_api_key', openaiApiKey);
+        localStorage.setItem("firecrawl_api_key", firecrawlApiKey);
       }
 
-      toast.success('API keys saved successfully!');
+      // Save OpenAI API key if provided
+      if (openaiApiKey) {
+        localStorage.setItem("openai_api_key", openaiApiKey);
+      }
+
+      toast.success("API keys saved successfully!");
       setShowApiKeyModal(false);
 
       // Process the pending CSV data
       if (pendingCSVData) {
         setCsvData(pendingCSVData);
-        setStep('setup');
+        setStep("setup");
         setPendingCSVData(null);
       }
     } catch (error) {
-      toast.error('Invalid API key. Please check and try again.');
-      console.error('API key validation error:', error);
+      toast.error("Invalid API key. Please check and try again.");
+      console.error("API key validation error:", error);
     } finally {
       setIsValidatingApiKey(false);
     }
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-4 max-w-7xl mx-auto font-inter">
-      <div className="flex justify-between items-center">
-        <Link href="https://www.firecrawl.dev/?utm_source=tool-csv-enrichment" target="_blank" rel="noopener noreferrer">
-          <Image
-            src="/firecrawl-logo-with-fire.png"
-            alt="Firecrawl Logo"
-            width={113}
-            height={24}
-          />
-        </Link>
-        <Button
-          asChild
-          variant="code"
-          className="font-medium flex items-center gap-2"
-        >
-          <a
-            href="https://github.com/mendableai/fire-enrich"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-            </svg>
-            Use this template
-          </a>
-        </Button>
-      </div>
-
-      <div className="text-center pt-8 pb-6">
-        <h1 className="text-[2.5rem] lg:text-[3.8rem] text-[#36322F] dark:text-white font-semibold tracking-tight leading-[0.9] opacity-0 animate-fade-up [animation-duration:500ms] [animation-delay:200ms] [animation-fill-mode:forwards]">
-          <span className="relative px-1 text-transparent bg-clip-text bg-gradient-to-tr from-red-600 to-yellow-500 inline-flex justify-center items-center">
-            Fire Enrich
-          </span>
-          <span className="block leading-[1.1] opacity-0 animate-fade-up [animation-duration:500ms] [animation-delay:400ms] [animation-fill-mode:forwards]">
-            Drag, Drop, Enrich.
-          </span>
-        </h1>
-        <p className="text-sm text-muted-foreground mt-3 opacity-0 animate-fade-up [animation-duration:500ms] [animation-delay:600ms] [animation-fill-mode:forwards]">
-          {FIRE_ENRICH_CONFIG.FEATURES.IS_UNLIMITED ? 
-            'Unlimited enrichment' : 
-            `Hosted limit: ${FIRE_ENRICH_CONFIG.CSV_LIMITS.MAX_ROWS} rows, ${FIRE_ENRICH_CONFIG.CSV_LIMITS.MAX_COLUMNS} columns • Self-deployment: Unlimited`
-          }
-        </p>
-      </div>
-
-      {/* Main Content */}
-      {isCheckingEnv ? (
-        <div className="text-center py-10">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Initializing...</p>
-        </div>
-      ) : (
-        <div className="bg-[#FBFAF9] p-4 sm:p-6 rounded-lg shadow-sm">
-        {step === 'setup' && (
-          <Button
-            variant="code"
-            size="sm"
-            onClick={handleBack}
-            className="mb-4 flex items-center gap-1.5"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </Button>
-        )}
-
-        {step === 'upload' && (
-          <CSVUploader onUpload={handleCSVUpload} />
-        )}
-
-        {step === 'setup' && csvData && (
-          <UnifiedEnrichmentView
-            rows={csvData.rows}
-            columns={csvData.columns}
-            onStartEnrichment={handleStartEnrichment}
-          />
-        )}
-
-        {step === 'enrichment' && csvData && (
-          <>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-1">Enrichment Results</h2>
-              <p className="text-sm text-muted-foreground">
-                Click on any row to view detailed information
-              </p>
+    <HeaderProvider>
+      <div className="min-h-screen bg-background-base">
+        {/* Header/Navigation Section */}
+        <HeaderDropdownWrapper />
+        <div className="sticky top-0 left-0 w-full z-[40] bg-background-base header">
+          <HeaderWrapper>
+            <div className="max-w-[900px] mx-auto w-full flex justify-between items-center">
+              <div className="flex gap-24 items-center">
+                <HeaderBrandKit />
+              </div>
+              <div className="flex gap-8">
+                <a
+                  className="contents"
+                  href="https://github.com/firecrawl/fire-enrich"
+                  target="_blank"
+                >
+                  <ButtonUI variant="tertiary">
+                    <GithubIcon />
+                    Use this Template
+                  </ButtonUI>
+                </a>
+              </div>
             </div>
-            <EnrichmentTable
-              rows={csvData.rows}
-              fields={selectedFields}
-              emailColumn={emailColumn}
-            />
-            <div className="mt-6 text-center">
-              <Button
-                variant="orange"
-                onClick={resetProcess}
-              >
-                Start New Enrichment
-              </Button>
-            </div>
-          </>
-        )}
+          </HeaderWrapper>
         </div>
-      )}
 
-      <footer className="py-8 text-center text-sm text-gray-600 dark:text-gray-400">
-        <p>
-          Powered by{' '}
-          <Link href="https://www.firecrawl.dev" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-medium">
-            Firecrawl
-          </Link>
-        </p>
-      </footer>
+        {/* Hero Section */}
+        <section className="overflow-x-clip" id="home-hero">
+          <div
+            className={`pt-28 lg:pt-254 lg:-mt-100 ${step === "upload" ? "pb-115" : "pb-20"} relative `}
+            id="hero-content"
+          >
+            <HomeHeroPixi />
+            <HeroFlame />
 
-      {/* API Key Modal */}
+            <HomeHeroBackground />
+
+            <AnimatePresence mode="wait">
+              {step == "upload" ? (
+                <motion.div
+                  key="hero"
+                  initial={{ opacity: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.5 }}
+                  className="relative container px-16"
+                >
+                  <HomeHeroBadge />
+                  <HomeHeroTitle />
+
+                  <p className="text-center text-body-large">
+                    Enrich you leads with clean & accurate data
+                    <br className="lg-max:hidden" />
+                    crawled from all over the internet.
+                  </p>
+                  <Link
+                    className="bg-black-alpha-4 hover:bg-black-alpha-6 rounded-6 px-8 lg:px-6 text-label-large h-30 lg:h-24 block mt-8 mx-auto w-max gap-4 transition-all"
+                    href="https://firecrawl.dev"
+                  >
+                    Powered by Firecrawl
+                  </Link>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="enrichment-process"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="relative container px-8 lg:px-16"
+                >
+                  <div className="text-center mb-8 lg:mb-12">
+                    <HomeHeroBadge />
+                    <div className="mb-6">
+                      <h1 className="text-4xl lg:text-5xl font-bold text-[#36322F] mb-4">
+                        {step === "setup"
+                          ? "Configure Enrichment"
+                          : "Enrichment Results"}
+                      </h1>
+                      <p className="text-center text-body-large text-gray-600">
+                        {step === "setup"
+                          ? "Select the fields you want to enrich and configure your settings"
+                          : "Your enriched data is ready. Click on any row to view detailed information"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="w-full max-w-7xl mx-auto relative z-[11] lg:z-[2]">
+                    <div
+                      className="bg-accent-white rounded-lg p-6 lg:p-10"
+                      style={{
+                        boxShadow:
+                          "0px 0px 44px 0px rgba(0, 0, 0, 0.02), 0px 88px 56px -20px rgba(0, 0, 0, 0.03), 0px 56px 56px -20px rgba(0, 0, 0, 0.02), 0px 32px 32px -20px rgba(0, 0, 0, 0.03), 0px 16px 24px -12px rgba(0, 0, 0, 0.03), 0px 0px 0px 1px rgba(0, 0, 0, 0.05), 0px 0px 0px 10px #F9F9F9",
+                      }}
+                    >
+                      <Button
+                        variant="secondary"
+                        size="default"
+                        onClick={handleBack}
+                        className="mb-6 flex items-center gap-1.5"
+                      >
+                        <ArrowLeft size={16} />
+                        Back
+                      </Button>
+
+                      {step === "setup" && csvData && (
+                        <div className="w-full">
+                          <UnifiedEnrichmentView
+                            rows={csvData.rows}
+                            columns={csvData.columns}
+                            onStartEnrichment={handleStartEnrichment}
+                          />
+                        </div>
+                      )}
+
+                      {step === "enrichment" && csvData && (
+                        <div className="w-full">
+                          <EnrichmentTable
+                            rows={csvData.rows}
+                            fields={selectedFields}
+                            emailColumn={emailColumn}
+                          />
+                          <div className="mt-16 text-center">
+                            <Button
+                              variant="primary"
+                              size="default"
+                              onClick={resetProcess}
+                            >
+                              Start New Enrichment
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          {step == "upload" && (
+            <motion.div
+              className="container lg:contents !p-16 relative -mt-90"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="max-w-400 lg:min-w-700 mx-auto w-full relative z-[11] lg:z-[2] rounded-20 -mt-30 lg:-mt-98">
+                <div
+                  className="overlay bg-accent-white"
+                  style={{
+                    boxShadow:
+                      "0px 0px 44px 0px rgba(0, 0, 0, 0.02), 0px 88px 56px -20px rgba(0, 0, 0, 0.03), 0px 56px 56px -20px rgba(0, 0, 0, 0.02), 0px 32px 32px -20px rgba(0, 0, 0, 0.03), 0px 16px 24px -12px rgba(0, 0, 0, 0.03), 0px 0px 0px 1px rgba(0, 0, 0, 0.05), 0px 0px 0px 10px #F9F9F9",
+                  }}
+                />
+
+                <div className="p-16 flex flex-col justify-center relative lg:min-w-[700px]">
+                  {isCheckingEnv ? (
+                    <div className="text-center py-10">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+                      <p className="text-sm text-muted-foreground">
+                        Initializing...
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="w-full">
+                      <CSVUploader onUpload={handleCSVUpload} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+          {step === "upload" && (
+            <div className="flex items-center justify-center">
+              <div className="hidden md:block">
+                <BackgroundOuterPiece />
+              </div>
+              <HeroScraping />
+            </div>
+          )}
+        </section>
+      </div>
+      {/*Dialog Input for BYOK*/}
       <Dialog open={showApiKeyModal} onOpenChange={setShowApiKeyModal}>
-        <DialogContent className="sm:max-w-md bg-white dark:bg-zinc-900">
+        <DialogContent
+          className="sm:max-w-md"
+          style={{ backgroundColor: "var(--accent-white)" }}
+        >
           <DialogHeader>
             <DialogTitle>API Keys Required</DialogTitle>
             <DialogDescription>
-              This tool requires API keys for Firecrawl and OpenAI to enrich your CSV data.
+              This tool requires API keys for Firecrawl and OpenAI to enrich
+              your CSV data.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
@@ -321,15 +419,18 @@ export default function HomePage() {
               <>
                 <Button
                   onClick={openFirecrawlWebsite}
-                  variant="outline"
-                  size="sm"
+                  variant="secondary"
+                  size="default"
                   className="flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ExternalLink className="h-4 w-4" />
                   Get Firecrawl API Key
                 </Button>
                 <div className="flex flex-col gap-2">
-                  <label htmlFor="firecrawl-key" className="text-sm font-medium">
+                  <label
+                    htmlFor="firecrawl-key"
+                    className="text-sm font-medium"
+                  >
                     Firecrawl API Key
                   </label>
                   <Input
@@ -343,13 +444,18 @@ export default function HomePage() {
                 </div>
               </>
             )}
-            
+
             {missingKeys.openai && (
               <>
                 <Button
-                  onClick={() => window.open('https://platform.openai.com/api-keys', '_blank')}
-                  variant="outline"
-                  size="sm"
+                  onClick={() =>
+                    window.open(
+                      "https://platform.openai.com/api-keys",
+                      "_blank",
+                    )
+                  }
+                  variant="secondary"
+                  size="default"
                   className="flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ExternalLink className="h-4 w-4" />
@@ -366,7 +472,7 @@ export default function HomePage() {
                     value={openaiApiKey}
                     onChange={(e) => setOpenaiApiKey(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !isValidatingApiKey) {
+                      if (e.key === "Enter" && !isValidatingApiKey) {
                         handleApiKeySubmit();
                       }
                     }}
@@ -378,7 +484,7 @@ export default function HomePage() {
           </div>
           <DialogFooter>
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => setShowApiKeyModal(false)}
               disabled={isValidatingApiKey}
             >
@@ -387,7 +493,7 @@ export default function HomePage() {
             <Button
               onClick={handleApiKeySubmit}
               disabled={isValidatingApiKey || !firecrawlApiKey.trim()}
-              variant="code"
+              variant="primary"
             >
               {isValidatingApiKey ? (
                 <>
@@ -395,12 +501,12 @@ export default function HomePage() {
                   Validating...
                 </>
               ) : (
-                'Submit'
+                "Submit"
               )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </HeaderProvider>
   );
 }
