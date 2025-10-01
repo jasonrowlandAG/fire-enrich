@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistMono } from "geist/font/mono";
+import { Roboto_Mono } from "next/font/google";
+import ColorStyles from "@/components/shared/color-styles/color-styles";
+import Scrollbar from "@/components/ui/scrollbar";
 import { Toaster } from "sonner";
-import "./globals.css";
+import "@/styles/main.css";
 
-const inter = Inter({ 
+const robotoMono = Roboto_Mono({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "500"],
+  variable: "--font-roboto-mono",
 });
 
 export const metadata: Metadata = {
   title: "Fire Enrich",
   description: "Enrich your data with AI-powered insights",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
@@ -20,8 +27,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans`}>
-        {children}
+      <head>
+        <ColorStyles />
+      </head>
+      <body
+        className={`${GeistMono.variable} ${robotoMono.variable} font-sans text-accent-black bg-background-base overflow-x-clip`}
+      >
+        <main className="overflow-x-clip">{children}</main>
+        <Scrollbar />
         <Toaster />
       </body>
     </html>

@@ -17,21 +17,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import Input from "@/components/ui/input";
 import { toast } from "sonner";
 
 export default function CSVEnrichmentPage() {
-  const [step, setStep] = useState<'upload' | 'setup' | 'enrichment'>('upload');
+  const [step, setStep] = useState<"upload" | "setup" | "enrichment">("upload");
   const [csvData, setCsvData] = useState<{
     rows: CSVRow[];
     columns: string[];
   } | null>(null);
-  const [emailColumn, setEmailColumn] = useState<string>('');
+  const [emailColumn, setEmailColumn] = useState<string>("");
   const [selectedFields, setSelectedFields] = useState<EnrichmentField[]>([]);
   const [isCheckingEnv, setIsCheckingEnv] = useState(true);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-  const [firecrawlApiKey, setFirecrawlApiKey] = useState<string>('');
-  const [openaiApiKey, setOpenaiApiKey] = useState<string>('');
+  const [firecrawlApiKey, setFirecrawlApiKey] = useState<string>("");
+  const [openaiApiKey, setOpenaiApiKey] = useState<string>("");
   const [isValidatingApiKey, setIsValidatingApiKey] = useState(false);
   const [missingKeys, setMissingKeys] = useState<{
     firecrawl: boolean;
@@ -46,31 +46,31 @@ export default function CSVEnrichmentPage() {
   useEffect(() => {
     const checkEnvironment = async () => {
       try {
-        const response = await fetch('/api/check-env');
+        const response = await fetch("/api/check-env");
         if (!response.ok) {
-          throw new Error('Failed to check environment');
+          throw new Error("Failed to check environment");
         }
         const data = await response.json();
         const hasFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
         const hasOpenAI = data.environmentStatus.OPENAI_API_KEY;
-        
+
         if (!hasFirecrawl) {
           // Check localStorage for saved API key
-          const savedKey = localStorage.getItem('firecrawl_api_key');
+          const savedKey = localStorage.getItem("firecrawl_api_key");
           if (savedKey) {
             setFirecrawlApiKey(savedKey);
           }
         }
-        
+
         if (!hasOpenAI) {
           // Check localStorage for saved API key
-          const savedKey = localStorage.getItem('openai_api_key');
+          const savedKey = localStorage.getItem("openai_api_key");
           if (savedKey) {
             setOpenaiApiKey(savedKey);
           }
         }
       } catch (error) {
-        console.error('Error checking environment:', error);
+        console.error("Error checking environment:", error);
       } finally {
         setIsCheckingEnv(false);
       }
@@ -81,14 +81,17 @@ export default function CSVEnrichmentPage() {
 
   const handleCSVUpload = async (rows: CSVRow[], columns: string[]) => {
     // Check if we have Firecrawl API key
-    const response = await fetch('/api/check-env');
+    const response = await fetch("/api/check-env");
     const data = await response.json();
     const hasFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
     const hasOpenAI = data.environmentStatus.OPENAI_API_KEY;
-    const savedFirecrawlKey = localStorage.getItem('firecrawl_api_key');
-    const savedOpenAIKey = localStorage.getItem('openai_api_key');
+    const savedFirecrawlKey = localStorage.getItem("firecrawl_api_key");
+    const savedOpenAIKey = localStorage.getItem("openai_api_key");
 
-    if ((!hasFirecrawl && !savedFirecrawlKey) || (!hasOpenAI && !savedOpenAIKey)) {
+    if (
+      (!hasFirecrawl && !savedFirecrawlKey) ||
+      (!hasOpenAI && !savedOpenAIKey)
+    ) {
       // Save the CSV data temporarily and show API key modal
       setPendingCSVData({ rows, columns });
       setMissingKeys({
@@ -98,54 +101,54 @@ export default function CSVEnrichmentPage() {
       setShowApiKeyModal(true);
     } else {
       setCsvData({ rows, columns });
-      setStep('setup');
+      setStep("setup");
     }
   };
 
   const handleStartEnrichment = (email: string, fields: EnrichmentField[]) => {
     setEmailColumn(email);
     setSelectedFields(fields);
-    setStep('enrichment');
+    setStep("enrichment");
   };
 
   const handleBack = () => {
-    if (step === 'setup') {
-      setStep('upload');
-    } else if (step === 'enrichment') {
-      setStep('setup');
+    if (step === "setup") {
+      setStep("upload");
+    } else if (step === "enrichment") {
+      setStep("setup");
     }
   };
 
   const resetProcess = () => {
-    setStep('upload');
+    setStep("upload");
     setCsvData(null);
-    setEmailColumn('');
+    setEmailColumn("");
     setSelectedFields([]);
   };
 
   const openFirecrawlWebsite = () => {
-    window.open('https://www.firecrawl.dev', '_blank');
+    window.open("https://www.firecrawl.dev", "_blank");
   };
 
   const handleApiKeySubmit = async () => {
     // Check environment again to see what's missing
-    const response = await fetch('/api/check-env');
+    const response = await fetch("/api/check-env");
     const data = await response.json();
     const hasEnvFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
     const hasEnvOpenAI = data.environmentStatus.OPENAI_API_KEY;
-    const hasSavedFirecrawl = localStorage.getItem('firecrawl_api_key');
-    const hasSavedOpenAI = localStorage.getItem('openai_api_key');
-    
+    const hasSavedFirecrawl = localStorage.getItem("firecrawl_api_key");
+    const hasSavedOpenAI = localStorage.getItem("openai_api_key");
+
     const needsFirecrawl = !hasEnvFirecrawl && !hasSavedFirecrawl;
     const needsOpenAI = !hasEnvOpenAI && !hasSavedOpenAI;
 
     if (needsFirecrawl && !firecrawlApiKey.trim()) {
-      toast.error('Please enter a valid Firecrawl API key');
+      toast.error("Please enter a valid Firecrawl API key");
       return;
     }
-    
+
     if (needsOpenAI && !openaiApiKey.trim()) {
-      toast.error('Please enter a valid OpenAI API key');
+      toast.error("Please enter a valid OpenAI API key");
       return;
     }
 
@@ -154,40 +157,40 @@ export default function CSVEnrichmentPage() {
     try {
       // Test the Firecrawl API key if provided
       if (firecrawlApiKey) {
-        const response = await fetch('/api/scrape', {
-          method: 'POST',
+        const response = await fetch("/api/scrape", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-Firecrawl-API-Key': firecrawlApiKey,
+            "Content-Type": "application/json",
+            "X-Firecrawl-API-Key": firecrawlApiKey,
           },
-          body: JSON.stringify({ url: 'https://example.com' }),
+          body: JSON.stringify({ url: "https://example.com" }),
         });
 
         if (!response.ok) {
-          throw new Error('Invalid Firecrawl API key');
+          throw new Error("Invalid Firecrawl API key");
         }
-        
+
         // Save the API key to localStorage
-        localStorage.setItem('firecrawl_api_key', firecrawlApiKey);
-      }
-      
-      // Save OpenAI API key if provided
-      if (openaiApiKey) {
-        localStorage.setItem('openai_api_key', openaiApiKey);
+        localStorage.setItem("firecrawl_api_key", firecrawlApiKey);
       }
 
-      toast.success('API keys saved successfully!');
+      // Save OpenAI API key if provided
+      if (openaiApiKey) {
+        localStorage.setItem("openai_api_key", openaiApiKey);
+      }
+
+      toast.success("API keys saved successfully!");
       setShowApiKeyModal(false);
 
       // Process the pending CSV data
       if (pendingCSVData) {
         setCsvData(pendingCSVData);
-        setStep('setup');
+        setStep("setup");
         setPendingCSVData(null);
       }
     } catch (error) {
-      toast.error('Invalid API key. Please check and try again.');
-      console.error('API key validation error:', error);
+      toast.error("Invalid API key. Please check and try again.");
+      console.error("API key validation error:", error);
     } finally {
       setIsValidatingApiKey(false);
     }
@@ -196,7 +199,11 @@ export default function CSVEnrichmentPage() {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-4 max-w-7xl mx-auto font-inter">
       <div className="flex justify-between items-center">
-        <Link href="https://www.firecrawl.dev/?utm_source=tool-csv-enrichment" target="_blank" rel="noopener noreferrer">
+        <Link
+          href="https://www.firecrawl.dev/?utm_source=tool-csv-enrichment"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <Image
             src="/firecrawl-logo-with-fire.png"
             alt="Firecrawl Logo"
@@ -214,7 +221,12 @@ export default function CSVEnrichmentPage() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="w-4 h-4"
+            >
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
             </svg>
             Use this template
@@ -241,64 +253,71 @@ export default function CSVEnrichmentPage() {
         </div>
       ) : (
         <div className="bg-[#FBFAF9] p-4 sm:p-6 rounded-lg shadow-sm">
-        {step === 'setup' && (
-          <Button
-            variant="code"
-            size="sm"
-            onClick={handleBack}
-            className="mb-4 flex items-center gap-1.5"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </Button>
-        )}
+          {step === "setup" && (
+            <Button
+              variant="code"
+              size="sm"
+              onClick={handleBack}
+              className="mb-4 flex items-center gap-1.5"
+            >
+              <ArrowLeft size={16} />
+              Back
+            </Button>
+          )}
 
-        {step === 'upload' && (
-          <CSVUploader onUpload={handleCSVUpload} />
-        )}
+          {step === "upload" && <CSVUploader onUpload={handleCSVUpload} />}
 
-        {step === 'setup' && csvData && (
-          <UnifiedEnrichmentView
-            rows={csvData.rows}
-            columns={csvData.columns}
-            onStartEnrichment={handleStartEnrichment}
-          />
-        )}
-
-        {step === 'enrichment' && csvData && (
-          <>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-1">Enrichment Results</h2>
-              <p className="text-sm text-muted-foreground">
-                Click on any row to view detailed information
-              </p>
-            </div>
-            <EnrichmentTable
+          {step === "setup" && csvData && (
+            <UnifiedEnrichmentView
               rows={csvData.rows}
-              fields={selectedFields}
-              emailColumn={emailColumn}
+              columns={csvData.columns}
+              onStartEnrichment={handleStartEnrichment}
             />
-            <div className="mt-6 text-center">
-              <Button
-                variant="orange"
-                onClick={resetProcess}
-              >
-                Start New Enrichment
-              </Button>
-            </div>
-          </>
-        )}
+          )}
+
+          {step === "enrichment" && csvData && (
+            <>
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold mb-1">
+                  Enrichment Results
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Click on any row to view detailed information
+                </p>
+              </div>
+              <EnrichmentTable
+                rows={csvData.rows}
+                fields={selectedFields}
+                emailColumn={emailColumn}
+              />
+              <div className="mt-6 text-center">
+                <Button variant="orange" onClick={resetProcess}>
+                  Start New Enrichment
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
       <footer className="py-8 text-center text-sm text-gray-600 dark:text-gray-400">
         <p>
-          Powered by{' '}
-          <Link href="https://www.firecrawl.dev" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-medium">
+          Powered by{" "}
+          <Link
+            href="https://www.firecrawl.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-medium"
+          >
             Firecrawl
           </Link>
-          {' and '}
-          <Link href="https://openai.com" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-medium">
+          {" and "}
+          <Link
+            href="https://openai.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-medium"
+          >
             OpenAI
           </Link>
         </p>
@@ -310,7 +329,8 @@ export default function CSVEnrichmentPage() {
           <DialogHeader>
             <DialogTitle>API Keys Required</DialogTitle>
             <DialogDescription>
-              This tool requires API keys for Firecrawl and OpenAI to enrich your CSV data.
+              This tool requires API keys for Firecrawl and OpenAI to enrich
+              your CSV data.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
@@ -326,7 +346,10 @@ export default function CSVEnrichmentPage() {
                   Get Firecrawl API Key
                 </Button>
                 <div className="flex flex-col gap-2">
-                  <label htmlFor="firecrawl-key" className="text-sm font-medium">
+                  <label
+                    htmlFor="firecrawl-key"
+                    className="text-sm font-medium"
+                  >
                     Firecrawl API Key
                   </label>
                   <Input
@@ -340,11 +363,16 @@ export default function CSVEnrichmentPage() {
                 </div>
               </>
             )}
-            
+
             {missingKeys.openai && (
               <>
                 <Button
-                  onClick={() => window.open('https://platform.openai.com/api-keys', '_blank')}
+                  onClick={() =>
+                    window.open(
+                      "https://platform.openai.com/api-keys",
+                      "_blank",
+                    )
+                  }
                   variant="outline"
                   size="sm"
                   className="flex items-center justify-center gap-2 cursor-pointer"
@@ -363,7 +391,7 @@ export default function CSVEnrichmentPage() {
                     value={openaiApiKey}
                     onChange={(e) => setOpenaiApiKey(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !isValidatingApiKey) {
+                      if (e.key === "Enter" && !isValidatingApiKey) {
                         handleApiKeySubmit();
                       }
                     }}
@@ -392,7 +420,7 @@ export default function CSVEnrichmentPage() {
                   Validating...
                 </>
               ) : (
-                'Submit'
+                "Submit"
               )}
             </Button>
           </DialogFooter>
