@@ -40,10 +40,10 @@ export function CSVPreview({ rows, columns, onEmailColumnConfirmed }: CSVPreview
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-4">
-        <h3 className="text-sm font-semibold">Email Column Detection</h3>
-        
+        <h3 className="text-label-medium">Email Column Detection</h3>
+
         {detectedColumn && detectedColumn.columnName && (
-          <div className="flex items-center text-xs">
+          <div className="flex items-center text-body-small">
             <span className="font-medium">Auto-detected:</span>
             <span className="ml-1 font-semibold">{detectedColumn.columnName}</span>
             <span className={`ml-2 ${
@@ -54,9 +54,9 @@ export function CSVPreview({ rows, columns, onEmailColumnConfirmed }: CSVPreview
             </span>
           </div>
         )}
-        
+
         <div className="flex items-center gap-2 ml-auto">
-          <label className="text-xs font-medium text-gray-700">
+          <label className="text-body-small font-medium text-gray-700">
             Select email column:
           </label>
           <Select value={selectedColumn} onValueChange={setSelectedColumn}>
@@ -75,16 +75,16 @@ export function CSVPreview({ rows, columns, onEmailColumnConfirmed }: CSVPreview
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-2">Preview (First 5 Rows)</h3>
+        <h3 className="text-label-medium mb-2">Preview (First 5 Rows)</h3>
         <div className="border border-gray-200 rounded overflow-hidden">
           <div className="overflow-x-auto max-h-60">
-            <table className="min-w-full divide-y divide-gray-200 text-xs">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
                   {columns.map((column) => (
                     <th
                       key={column}
-                      className={`px-3 py-2 text-left font-medium uppercase tracking-wider ${
+                      className={`px-3 py-2 text-left text-label-small uppercase tracking-wider ${
                         column === selectedColumn
                           ? 'text-black bg-gray-100'
                           : 'text-gray-500'
@@ -104,7 +104,7 @@ export function CSVPreview({ rows, columns, onEmailColumnConfirmed }: CSVPreview
                     {columns.map((column) => (
                       <td
                         key={column}
-                        className={`px-3 py-1.5 whitespace-nowrap ${
+                        className={`px-3 py-1.5 whitespace-nowrap text-body-small ${
                           column === selectedColumn
                             ? 'font-medium text-gray-900 bg-orange-50'
                             : 'text-gray-500'
@@ -121,7 +121,7 @@ export function CSVPreview({ rows, columns, onEmailColumnConfirmed }: CSVPreview
                   <tr className="bg-gray-50">
                     <td
                       colSpan={columns.length}
-                      className="px-3 py-2 text-center text-gray-400 italic"
+                      className="px-3 py-2 text-center text-body-small text-gray-400 italic"
                     >
                       ... and {rows.length - 5} more rows
                     </td>

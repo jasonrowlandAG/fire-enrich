@@ -43,7 +43,7 @@ export default function HeroScrapingCodeLoading({
   }, [finished]);
 
   return (
-    <div className="flex gap-6 p-6 pr-0 rounded-full before:inside-border before:border-border-faint absolute right-20 bottom-20 text-mono-small font-mono text-accent-black">
+    <div className="flex gap-6 p-6 pr-0 rounded-full before:inside-border before:border-border-faint absolute right-20 bottom-20 text-mono-small text-accent-black">
       <Spinner finished={finished} />
 
       <AnimatedWidth initial={{ width: "auto" }}>

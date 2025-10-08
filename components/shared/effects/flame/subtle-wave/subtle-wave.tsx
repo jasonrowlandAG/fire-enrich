@@ -34,7 +34,7 @@ export default function SubtleWave({ className = "" }: { className?: string }) {
   return (
     <div
       ref={containerRef}
-      className={`font-mono text-white/10 whitespace-pre select-none fc-decoration ${className}`}
+      className={`text-white/10 whitespace-pre select-none fc-decoration ${className}`}
       style={{
         fontSize: "10px",
         lineHeight: "1",

@@ -123,7 +123,7 @@ export default function HeroScrapingCode({ step }: { step: number }) {
             ))}
           </div>
 
-          <div className="text-mono-x-small font-mono text-black-alpha-20">
+          <div className="text-mono-x-small text-black-alpha-20">
             [ .JSON ]
           </div>
         </div>

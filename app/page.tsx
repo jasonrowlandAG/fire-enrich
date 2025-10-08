@@ -226,8 +226,8 @@ export default function HomePage() {
         {/* Header/Navigation Section */}
         <HeaderDropdownWrapper />
         <div className="sticky top-0 left-0 w-full z-[40] bg-background-base header">
-          <HeaderWrapper>
-            <div className="max-w-[900px] mx-auto w-full flex justify-between items-center">
+          {step === "enrichment" ? (
+            <div className="py-20 px-16 flex justify-between items-center">
               <div className="flex gap-24 items-center">
                 <HeaderBrandKit />
               </div>
@@ -244,7 +244,27 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
-          </HeaderWrapper>
+          ) : (
+            <HeaderWrapper>
+              <div className="max-w-[900px] mx-auto w-full flex justify-between items-center">
+                <div className="flex gap-24 items-center">
+                  <HeaderBrandKit />
+                </div>
+                <div className="flex gap-8">
+                  <a
+                    className="contents"
+                    href="https://github.com/firecrawl/fire-enrich"
+                    target="_blank"
+                  >
+                    <ButtonUI variant="tertiary">
+                      <GithubIcon />
+                      Use this Template
+                    </ButtonUI>
+                  </a>
+                </div>
+              </div>
+            </HeaderWrapper>
+          )}
         </div>
 
         {/* Hero Section */}
@@ -285,15 +305,18 @@ export default function HomePage() {
               ) : (
                 <motion.div
                   key="enrichment-process"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.5,
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
                   className="relative container px-8 lg:px-16"
                 >
                   <div className="text-center mb-8 lg:mb-12">
                     <HomeHeroBadge />
                     <div className="mb-6">
-                      <h1 className="text-4xl lg:text-5xl font-bold text-[#36322F] mb-4">
+                      <h1 className="text-title-h2 lg:text-title-h1 text-zinc-900 mb-4">
                         {step === "setup"
                           ? "Configure Enrichment"
                           : "Enrichment Results"}
@@ -306,54 +329,45 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="w-full max-w-7xl mx-auto relative z-[11] lg:z-[2]">
-                    <div
-                      className="bg-accent-white rounded-lg p-6 lg:p-10"
-                      style={{
-                        boxShadow:
-                          "0px 0px 44px 0px rgba(0, 0, 0, 0.02), 0px 88px 56px -20px rgba(0, 0, 0, 0.03), 0px 56px 56px -20px rgba(0, 0, 0, 0.02), 0px 32px 32px -20px rgba(0, 0, 0, 0.03), 0px 16px 24px -12px rgba(0, 0, 0, 0.03), 0px 0px 0px 1px rgba(0, 0, 0, 0.05), 0px 0px 0px 10px #F9F9F9",
-                      }}
-                    >
-                      <Button
-                        variant="secondary"
-                        size="default"
-                        onClick={handleBack}
-                        className="mb-6 flex items-center gap-1.5"
+                  {step === "setup" && (
+                    <div className="w-full max-w-7xl mx-auto relative z-[11] lg:z-[2]">
+                      <div
+                        className="bg-accent-white rounded-lg p-6 lg:p-10"
+                        style={{
+                          boxShadow:
+                            "0px 0px 44px 0px rgba(0, 0, 0, 0.02), 0px 88px 56px -20px rgba(0, 0, 0, 0.03), 0px 56px 56px -20px rgba(0, 0, 0, 0.02), 0px 32px 32px -20px rgba(0, 0, 0, 0.03), 0px 16px 24px -12px rgba(0, 0, 0, 0.03), 0px 0px 0px 1px rgba(0, 0, 0, 0.05), 0px 0px 0px 10px #F9F9F9",
+                        }}
                       >
-                        <ArrowLeft size={16} />
-                        Back
-                      </Button>
-
-                      {step === "setup" && csvData && (
-                        <div className="w-full">
-                          <UnifiedEnrichmentView
-                            rows={csvData.rows}
-                            columns={csvData.columns}
-                            onStartEnrichment={handleStartEnrichment}
-                          />
-                        </div>
-                      )}
-
-                      {step === "enrichment" && csvData && (
-                        <div className="w-full">
-                          <EnrichmentTable
-                            rows={csvData.rows}
-                            fields={selectedFields}
-                            emailColumn={emailColumn}
-                          />
-                          <div className="mt-16 text-center">
-                            <Button
-                              variant="primary"
-                              size="default"
-                              onClick={resetProcess}
-                            >
-                              Start New Enrichment
-                            </Button>
+                        {csvData && (
+                          <div className="w-full">
+                            <UnifiedEnrichmentView
+                              rows={csvData.rows}
+                              columns={csvData.columns}
+                              onStartEnrichment={handleStartEnrichment}
+                            />
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {step === "enrichment" && csvData && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.98, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{
+                        duration: 0.6,
+                        ease: [0.22, 1, 0.36, 1] // Custom cubic-bezier for smooth easing
+                      }}
+                      className="fixed inset-0 top-[72px] z-50 bg-background-base"
+                    >
+                      <EnrichmentTable
+                        rows={csvData.rows}
+                        fields={selectedFields}
+                        emailColumn={emailColumn}
+                      />
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -377,8 +391,8 @@ export default function HomePage() {
                 <div className="p-16 flex flex-col justify-center relative lg:min-w-[700px]">
                   {isCheckingEnv ? (
                     <div className="text-center py-10">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-                      <p className="text-sm text-muted-foreground">
+                      <Loader2 style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }} className="animate-spin text-primary mx-auto mb-4" />
+                      <p className="text-body-small text-muted-foreground">
                         Initializing...
                       </p>
                     </div>
@@ -423,13 +437,13 @@ export default function HomePage() {
                   size="default"
                   className="flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <ExternalLink className="h-16 w-16" />
+                  <ExternalLink style={{ width: '20px', height: '20px', minWidth: '20px', minHeight: '20px' }} />
                   Get Firecrawl API Key
                 </Button>
                 <div className="flex flex-col gap-2">
                   <label
                     htmlFor="firecrawl-key"
-                    className="text-sm font-medium"
+                    className="text-body-small font-medium"
                   >
                     Firecrawl API Key
                   </label>
@@ -458,11 +472,11 @@ export default function HomePage() {
                   size="default"
                   className="flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <ExternalLink className="h-16 w-16" />
+                  <ExternalLink style={{ width: '20px', height: '20px', minWidth: '20px', minHeight: '20px' }} />
                   Get OpenAI API Key
                 </Button>
                 <div className="flex flex-col gap-2">
-                  <label htmlFor="openai-key" className="text-sm font-medium">
+                  <label htmlFor="openai-key" className="text-body-small font-medium">
                     OpenAI API Key
                   </label>
                   <Input
@@ -497,7 +511,7 @@ export default function HomePage() {
             >
               {isValidatingApiKey ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 style={{ width: '20px', height: '20px', minWidth: '20px', minHeight: '20px' }} className="mr-2 animate-spin" />
                   Validating...
                 </>
               ) : (

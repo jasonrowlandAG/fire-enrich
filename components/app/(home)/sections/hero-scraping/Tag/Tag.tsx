@@ -51,7 +51,7 @@ export default function HeroScrapingTag({
         filter: "blur(0px)",
       }}
       className={cn(
-        "py-4 h-max font-mono w-max px-6 text-mono-x-small rounded-6 transition-colors",
+        "py-4 h-max w-max px-6 text-mono-x-small rounded-6 transition-colors",
         active
           ? "bg-heat-12 text-heat-100"
           : "bg-black-alpha-4 text-black-alpha-56",

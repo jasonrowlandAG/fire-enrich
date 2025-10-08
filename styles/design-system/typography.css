@@ -44,7 +44,6 @@
 /* Font Stack Variables */
 :root {
   --font-sans: 'SuisseIntl', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Roboto Mono', Consolas, monospace;
 }
 
 /* Typography Classes - both semantic and utility variants */
@@ -97,6 +96,13 @@
   line-height: 1.4;
   letter-spacing: -0.01em;
   font-weight: 500;
+}
+
+.body-x-small,
+.text-body-x-small {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .body-small,
@@ -159,21 +165,18 @@
 
 .mono-small,
 .text-mono-small {
-  font-family: var(--font-mono);
   font-size: 0.75rem; /* 12px */
   line-height: 1.5;
 }
 
 .mono-medium,
 .text-mono-medium {
-  font-family: var(--font-mono);
   font-size: 0.875rem; /* 14px */
   line-height: 1.5;
 }
 
 .mono-large,
 .text-mono-large {
-  font-family: var(--font-mono);
   font-size: 1rem; /* 16px */
   line-height: 1.5;
 }

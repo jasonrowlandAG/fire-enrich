@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AgentEnrichmentStrategy } from '@/lib/strategies/agent-enrichment-strategy';
 import type { EnrichmentRequest, RowEnrichmentResult } from '@/lib/types';
 import { loadSkipList, shouldSkipEmail, getSkipReason } from '@/lib/utils/skip-list';
+import { ENRICHMENT_CONFIG } from '@/lib/config/enrichment';
 
 // Use Node.js runtime for better compatibility
 export const runtime = 'nodejs';
@@ -88,29 +89,42 @@ export async function POST(request: NextRequest) {
             )
           );
 
+          // Process rows with rolling concurrency (as each finishes, start the next)
+          const concurrency = ENRICHMENT_CONFIG.CONCURRENT_ROWS;
+          console.log(`[ENRICHMENT] Processing ${rows.length} rows with rolling concurrency: ${concurrency}`);
+
+          // Send pending status for all rows
           for (let i = 0; i < rows.length; i++) {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  type: 'pending',
+                  rowIndex: i,
+                  totalRows: rows.length,
+                })}\n\n`
+              )
+            );
+          }
+
+          // Process rows with rolling concurrency
+          const processRow = async (i: number) => {
             // Check if cancelled
             if (abortController.signal.aborted) {
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ type: 'cancelled' })}\n\n`
-                )
-              );
-              break;
+              return;
             }
 
             const row = rows[i];
             const email = row[emailColumn];
-            
+
             // Add name to row context if nameColumn is provided
             if (nameColumn && row[nameColumn]) {
               row._name = row[nameColumn];
             }
-            
+
             // Check if email should be skipped
             if (email && shouldSkipEmail(email, skipList)) {
               const skipReason = getSkipReason(email, skipList);
-              
+
               // Send skip result
               const skipResult: RowEnrichmentResult = {
                 rowIndex: i,
@@ -119,7 +133,7 @@ export async function POST(request: NextRequest) {
                 status: 'skipped',
                 error: skipReason,
               };
-              
+
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({
@@ -128,10 +142,10 @@ export async function POST(request: NextRequest) {
                   })}\n\n`
                 )
               );
-              
-              continue; // Skip to next row
+
+              return;
             }
-            
+
             // Send processing status
             controller.enqueue(
               encoder.encode(
@@ -147,14 +161,14 @@ export async function POST(request: NextRequest) {
               // Enrich the row
               console.log(`[ENRICHMENT] Processing row ${i + 1}/${rows.length} - Email: ${email} - Strategy: ${strategyName}`);
               const startTime = Date.now();
-              
+
               // Agent strategies return RowEnrichmentResult
               const result = await enrichmentStrategy.enrichRow(
                 row,
                 fields,
                 emailColumn,
                 undefined, // onProgress
-                (message: string, type: 'info' | 'success' | 'warning' | 'agent') => {
+                (message: string, type: 'info' | 'success' | 'warning' | 'agent', sourceUrl?: string) => {
                   // Stream agent progress messages
                   controller.enqueue(
                     encoder.encode(
@@ -163,16 +177,17 @@ export async function POST(request: NextRequest) {
                         rowIndex: i,
                         message,
                         messageType: type,
+                        sourceUrl, // Include sourceUrl for favicons
                       })}\n\n`
                     )
                   );
                 }
               );
               result.rowIndex = i; // Set the correct row index
-              
+
               const duration = Date.now() - startTime;
               console.log(`[ENRICHMENT] Completed row ${i + 1} in ${duration}ms - Fields enriched: ${Object.keys(result.enrichments).length}`);
-              
+
               // Log which fields were successfully enriched
               const enrichedFields = Object.entries(result.enrichments)
                 .filter(([, enrichment]) => enrichment.value)
@@ -210,9 +225,40 @@ export async function POST(request: NextRequest) {
                 )
               );
             }
+          };
 
-            // Small delay between rows to prevent rate limiting
-            await new Promise(resolve => setTimeout(resolve, 1000));
+          // Create a queue and process with rolling concurrency
+          let currentIndex = 0;
+          const activePromises: Promise<void>[] = [];
+
+          while (currentIndex < rows.length || activePromises.length > 0) {
+            // Check if cancelled
+            if (abortController.signal.aborted) {
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: 'cancelled' })}\n\n`
+                )
+              );
+              break;
+            }
+
+            // Start new rows up to concurrency limit
+            while (currentIndex < rows.length && activePromises.length < concurrency) {
+              const rowIndex = currentIndex++;
+              const promise = processRow(rowIndex).then(() => {
+                // Remove this promise from active list when done
+                const index = activePromises.indexOf(promise);
+                if (index > -1) {
+                  activePromises.splice(index, 1);
+                }
+              });
+              activePromises.push(promise);
+            }
+
+            // Wait for at least one to finish before continuing
+            if (activePromises.length > 0) {
+              await Promise.race(activePromises);
+            }
           }
 
           // Send completion
