@@ -60,7 +60,7 @@ export default function SubtleAsciiAnimation({
   return (
     <div
       ref={containerRef}
-      className={`font-mono text-white/20 whitespace-pre select-none ${className}`}
+      className={`text-white/20 whitespace-pre select-none ${className}`}
       style={{
         fontSize: "10px",
         lineHeight: "1",

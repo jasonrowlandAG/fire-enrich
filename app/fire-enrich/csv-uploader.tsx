@@ -96,8 +96,8 @@ export function CSVUploader({ onUpload }: CSVUploaderProps) {
           flex flex-col items-center justify-center
           ${
             isDragActive
-              ? "border-heat-100 bg-heat-4 scale-[1.02] shadow-xl"
-              : "border-border-muted hover:border-heat-100 bg-accent-white hover:bg-heat-4 hover:shadow-lg hover:scale-[1.01]"
+              ? "border-heat-100 bg-heat-4 shadow-xl"
+              : "border-border-muted hover:border-heat-100 bg-accent-white hover:bg-heat-4 hover:shadow-lg"
           }
           ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}
         `}
@@ -125,7 +125,7 @@ export function CSVUploader({ onUpload }: CSVUploaderProps) {
                   <div className="w-2 h-2 bg-heat-100 rounded-full animate-pulse animation-delay-150" />
                   <div className="w-2 h-2 bg-heat-100 rounded-full animate-pulse animation-delay-300" />
                 </div>
-                <span className="text-lg font-medium text-accent-black">
+                <span className="text-body-large font-medium text-accent-black">
                   Processing...
                 </span>
               </div>
@@ -134,7 +134,7 @@ export function CSVUploader({ onUpload }: CSVUploaderProps) {
           ) : isDragActive ? (
             <div className="animate-fade-in">
               <p
-                className="text-xl font-semibold mb-1"
+                className="text-title-h5 font-semibold mb-1"
                 style={{ color: "var(--heat-100)" }}
               >
                 Drop it here!
@@ -145,7 +145,7 @@ export function CSVUploader({ onUpload }: CSVUploaderProps) {
             </div>
           ) : fileName ? (
             <div className="text-center">
-              <p className="text-lg font-medium text-accent-black mb-1">
+              <p className="text-body-large font-medium text-accent-black mb-1">
                 {fileName}
               </p>
               <p className="text-sm text-black-alpha-64">
@@ -154,13 +154,13 @@ export function CSVUploader({ onUpload }: CSVUploaderProps) {
             </div>
           ) : (
             <div className="text-center">
-              <p className="text-xl font-medium text-accent-black mb-2">
+              <p className="text-title-h5 font-medium text-accent-black mb-2">
                 Drag & drop your CSV file here
               </p>
               <p className="text-sm text-black-alpha-64 my-4">
                 or click to browse from your computer
               </p>
-              <Button className="inline-flex items-center mt-16 transition-all duration-200 hover:scale-105 hover:shadow-lg">
+              <Button className="inline-flex items-center mt-16 transition-all duration-200">
                 <Upload className="w-16 h-16" />
                 <span className="font-medium">Select CSV File</span>
               </Button>
@@ -175,7 +175,7 @@ export function CSVUploader({ onUpload }: CSVUploaderProps) {
           <p className="text-sm whitespace-pre-line text-red-600">{error}</p>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full p-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full p-4 mt-4">
         {/* Download Sample */}
         <Button
           variant="primary"
@@ -197,41 +197,10 @@ export function CSVUploader({ onUpload }: CSVUploaderProps) {
         {/* Email Required */}
         <Button
           variant="secondary"
-          className="flex flex-col items-start justify-center gap-1 text-left w-full h-full"
-        >
-          <div className="flex items-center gap-2">
-            <AtSign className="w-16 h-16 shrink-0" />
-            <span className="font-medium">Email Required</span>
-          </div>
-          <span className="text-sm opacity-80">Must contain email address</span>
-        </Button>
-
-        {/* Unlimited / Demo */}
-        <Button
-          variant="secondary"
           className="flex flex-col items-start justify-center gap-1 p-4 text-left w-full h-full"
         >
-          {FIRE_ENRICH_CONFIG.FEATURES.IS_UNLIMITED ? (
-            <>
-              <div className="flex items-center gap-2">
-                <InfinityIcon className="w-16 h-16 shrink-0" />
-                <span className="font-medium">Unlimited Mode</span>
-              </div>
-              <span className="text-sm opacity-80">
-                Unlimited rows &amp; columns
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="text-center">
-                Demo version limited to {FIRE_ENRICH_CONFIG.CSV_LIMITS.MAX_ROWS}
-                rows &amp; {FIRE_ENRICH_CONFIG.CSV_LIMITS.MAX_COLUMNS} columns
-              </span>
-              <span className="text-[10px] opacity-70">
-                (Unlimited when self-hosted)
-              </span>
-            </>
-          )}
+          <span className="font-medium">Email Required</span>
+          <span className="text-sm opacity-80">Must contain email address</span>
         </Button>
       </div>
     </div>

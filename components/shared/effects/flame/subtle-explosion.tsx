@@ -54,7 +54,7 @@ export function SubtleExplosion({
     >
       <div
         ref={ref}
-        className="text-black-alpha-20 font-mono absolute inset-0 flex items-center justify-center fc-decoration"
+        className="text-black-alpha-20 absolute inset-0 flex items-center justify-center fc-decoration"
         dangerouslySetInnerHTML={{ __html: data[0] }}
         style={{
           whiteSpace: "pre",

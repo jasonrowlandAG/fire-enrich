@@ -674,7 +674,8 @@ export class AgentOrchestrator {
       ? await this.openai.extractStructuredDataWithCorroboration(
           combinedContent,
           fields,
-          enrichmentContext
+          enrichmentContext,
+          onAgentProgress
         )
       : await this.openai.extractStructuredDataOriginal(
           combinedContent,
@@ -830,7 +831,8 @@ export class AgentOrchestrator {
       ? await this.openai.extractStructuredDataWithCorroboration(
           combinedContent,
           fields,
-          enrichmentContext
+          enrichmentContext,
+          onAgentProgress
         )
       : await this.openai.extractStructuredDataOriginal(
           combinedContent,
@@ -984,7 +986,8 @@ export class AgentOrchestrator {
       ? await this.openai.extractStructuredDataWithCorroboration(
           combinedContent,
           fields,
-          enrichmentContext
+          enrichmentContext,
+          onAgentProgress
         )
       : await this.openai.extractStructuredDataOriginal(
           combinedContent,
@@ -1242,7 +1245,8 @@ export class AgentOrchestrator {
       ? await this.openai.extractStructuredDataWithCorroboration(
           combinedContent,
           fields,
-          enrichmentContext
+          enrichmentContext,
+          onAgentProgress
         )
       : await this.openai.extractStructuredDataOriginal(
           combinedContent,
@@ -1448,7 +1452,8 @@ export class AgentOrchestrator {
       ? await this.openai.extractStructuredDataWithCorroboration(
           combinedContent,
           fields,
-          enrichmentContext
+          enrichmentContext,
+          onAgentProgress
         )
       : await this.openai.extractStructuredDataOriginal(
           combinedContent,

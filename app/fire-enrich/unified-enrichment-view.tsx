@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/shared/button/button";
 import Input from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { CSVRow, EnrichmentField } from "@/lib/types";
 import { detectEmailColumn, EMAIL_REGEX } from "@/lib/utils/email-detection";
 import { generateVariableName } from "@/lib/utils/field-utils";
-import { X, Plus, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Plus, Sparkles, ChevronDown, ChevronUp, ArrowLeft, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { AlertCircle } from "lucide-react";
 
@@ -75,13 +76,6 @@ const PRESET_FIELDS: EnrichmentField[] = [
     name: "headquarters",
     displayName: "Headquarters",
     description: "The location of the company headquarters",
-    type: "string",
-    required: false,
-  },
-  {
-    name: "revenue",
-    displayName: "Revenue",
-    description: "The annual revenue of the company",
     type: "string",
     required: false,
   },
@@ -263,10 +257,10 @@ export function UnifiedEnrichmentView({
                     <TableHead
                       key={idx}
                       className={cn(
-                        "transition-all duration-700 relative",
+                        "transition-all duration-700 relative px-6 py-4",
                         isEmailCol
-                          ? "gradient-fire text-white font-medium text-label-small heat-glow"
-                          : "bg-background-lighter font-medium text-label-small",
+                          ? "gradient-fire text-white font-medium text-body-medium heat-glow"
+                          : "bg-background-lighter font-medium text-body-medium",
                         !isEmailCol && step >= 2 && "",
                       )}
                     >
@@ -280,7 +274,7 @@ export function UnifiedEnrichmentView({
                     <TableHead
                       key={`new-${idx}`}
                       className={cn(
-                        "font-medium transition-all duration-700 bg-heat-12 text-accent-black text-label-small",
+                        "font-medium transition-all duration-700 bg-background-lighter text-accent-black text-body-medium px-6 py-4",
                         "animate-in fade-in slide-in-from-right-2",
                       )}
                       style={{
@@ -289,7 +283,6 @@ export function UnifiedEnrichmentView({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Sparkles className="text-heat-100 h-12 w-12" />
                         <span className="text-black-alpha-88">
                           {field.displayName}
                         </span>
@@ -297,7 +290,7 @@ export function UnifiedEnrichmentView({
                     </TableHead>
                   ))}
                 {step >= 2 && selectedFields.length > maxVisibleFields && (
-                  <TableHead className="text-center text-black-alpha-56 animate-in fade-in duration-700 text-label-small">
+                  <TableHead className="text-center text-black-alpha-56 animate-in fade-in duration-700 text-body-medium px-6 py-4">
                     +{selectedFields.length - maxVisibleFields} more
                   </TableHead>
                 )}
@@ -318,22 +311,36 @@ export function UnifiedEnrichmentView({
                         <TableCell
                           key={colIdx}
                           className={cn(
-                            "bg-heat-8 transition-all duration-700",
+                            "bg-heat-8 transition-all duration-700 px-6 py-4 group/email",
                             "text-accent-black",
                           )}
                         >
-                          <span
-                            className={cn(
-                              "text-mono-small truncate block max-w-[200px] font-mono font-medium",
-                              isValidEmail
-                                ? "text-accent-black email-valid"
-                                : email
-                                  ? "text-accent-crimson email-invalid"
-                                  : "text-black-alpha-40 email-empty",
-                            )}
-                          >
-                            {email || "-"}
-                          </span>
+                          <div className="flex items-center gap-2 relative">
+                            <button
+                              onClick={async () => {
+                                if (email) {
+                                  await navigator.clipboard.writeText(email);
+                                  toast.success("Email copied to clipboard");
+                                }
+                              }}
+                              className="absolute left-0 opacity-0 group-hover/email:opacity-100 transition-opacity text-gray-500 hover:text-gray-700 z-10"
+                              title="Copy email"
+                            >
+                              <Copy size={14} />
+                            </button>
+                            <span
+                              className={cn(
+                                "text-body-medium truncate block max-w-[200px] font-medium group-hover/email:translate-x-5 transition-transform",
+                                isValidEmail
+                                  ? "text-accent-black email-valid"
+                                  : email
+                                    ? "text-accent-crimson email-invalid"
+                                    : "text-black-alpha-40 email-empty",
+                              )}
+                            >
+                              {email || "-"}
+                            </span>
+                          </div>
                         </TableCell>
                       );
                     }
@@ -342,11 +349,11 @@ export function UnifiedEnrichmentView({
                       <TableCell
                         key={colIdx}
                         className={cn(
-                          "transition-all duration-700 bg-background-base",
+                          "transition-all duration-700 bg-background-base px-6 py-4",
                           step >= 2 && "",
                         )}
                       >
-                        <span className="text-body-small truncate block min-w-[100px] text-black-alpha-64">
+                        <span className="text-body-medium truncate block min-w-[100px] text-black-alpha-64">
                           {cellValue || "-"}
                         </span>
                       </TableCell>
@@ -358,7 +365,7 @@ export function UnifiedEnrichmentView({
                       <TableCell
                         key={`new-${idx}`}
                         className={cn(
-                          "transition-all duration-700",
+                          "transition-all duration-700 px-6 py-4 bg-white",
                           "animate-in fade-in slide-in-from-right-2",
                         )}
                         style={{
@@ -370,7 +377,7 @@ export function UnifiedEnrichmentView({
                       </TableCell>
                     ))}
                   {step >= 2 && selectedFields.length > maxVisibleFields && (
-                    <TableCell className="text-center text-black-alpha-40 animate-in fade-in duration-700">
+                    <TableCell className="text-center text-black-alpha-40 animate-in fade-in duration-700 px-6 py-4">
                       ...
                     </TableCell>
                   )}
@@ -382,7 +389,7 @@ export function UnifiedEnrichmentView({
         {!showAllRows && rows.length > 3 && (
           <button
             onClick={() => setShowAllRows(true)}
-            className="text-body-small text-heat-100 hover:text-accent-crimson mt-3 font-medium transition-colors"
+            className="text-body-medium text-gray-600 hover:text-gray-900 mt-3 font-medium transition-colors"
           >
             Show {rows.length - 3} more rows →
           </button>
@@ -390,7 +397,7 @@ export function UnifiedEnrichmentView({
         {showAllRows && (
           <button
             onClick={() => setShowAllRows(false)}
-            className="text-body-small text-heat-100 hover:text-accent-crimson mt-3 font-medium transition-colors"
+            className="text-body-medium text-gray-600 hover:text-gray-900 mt-3 font-medium transition-colors"
           >
             Show less
           </button>
@@ -399,31 +406,37 @@ export function UnifiedEnrichmentView({
 
       {/* Step content below */}
       <div className="w-full">
+        <AnimatePresence mode="wait">
         {/* Step 1: Email column selection */}
         {step === 1 && (
-          <div className="stack space-y-6">
-            <Card className="p-8 border-border-muted rounded-md">
+          <motion.div
+            key="step-1"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="stack space-y-8"
+          >
+            <Card className="p-16 border-gray-200 rounded-8">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6 sm:gap-2">
-                  <h3 className="text-accent-black">
+                <div className="flex items-center gap-12">
+                  <h3 className="text-body-medium text-gray-900">
                     {emailColumn
-                      ? "Email Column Detected:"
-                      : "Select Email Column:"}
+                      ? "Email Column Detected"
+                      : "Select Email Column"}
                   </h3>
                   {emailColumn ? (
                     <>
-                      <span className="font-mono text-mono-medium bg-heat-12 px-4 py-2 rounded-full border border-heat-40 text-heat-100 font-medium">
+                      <span className="text-body-medium bg-gray-100 px-8 py-4 rounded-6 border border-gray-200 text-gray-700">
                         {emailColumn}
                       </span>
                       {!showEmailDropdown && (
-                        <Button
-                          variant="tertiary"
-                          size="default"
+                        <button
                           onClick={() => setShowEmailDropdown(true)}
-                          className="text-heat-100 hover:text-accent-crimson hover:bg-white/50 transition-all"
+                          className="text-body-small text-gray-600 hover:text-gray-900 hover:underline transition-colors"
                         >
                           Change
-                        </Button>
+                        </button>
                       )}
                       {showEmailDropdown && (
                         <Select
@@ -433,10 +446,10 @@ export function UnifiedEnrichmentView({
                             setShowEmailDropdownStep1(false);
                           }}
                         >
-                          <SelectTrigger className="h-full w-[200px]">
+                          <SelectTrigger className="h-32 w-[200px] border-gray-200 focus:border-gray-400">
                             <SelectValue placeholder="Change" />
                           </SelectTrigger>
-                          <SelectContent className="bg-white border-border-muted">
+                          <SelectContent className="bg-white border-gray-200">
                             {columns.map((col) => (
                               <SelectItem
                                 key={col}
@@ -455,13 +468,13 @@ export function UnifiedEnrichmentView({
                       value={emailColumn}
                       onValueChange={(value) => setEmailColumn(value)}
                     >
-                      <SelectTrigger className="h-full w-[150px]">
+                      <SelectTrigger className="h-32 w-[200px] border-gray-200 focus:border-gray-400">
                         <SelectValue
                           placeholder="Email Column"
                           className="text-body-medium"
                         />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-border-muted">
+                      <SelectContent className="bg-white border-gray-200">
                         {columns.map((col) => (
                           <SelectItem
                             key={col}
@@ -476,14 +489,13 @@ export function UnifiedEnrichmentView({
                   )}
                 </div>
 
-                <Button
-                  variant="primary"
-                  size="default"
+                <button
                   onClick={() => setStep(2)}
                   disabled={!emailColumn}
+                  className="rounded-8 px-10 py-6 gap-4 text-body-medium text-accent-black bg-black-alpha-4 hover:bg-black-alpha-6 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
-                </Button>
+                </button>
               </div>
             </Card>
 
@@ -508,10 +520,10 @@ export function UnifiedEnrichmentView({
                 if (skippableEmails.length === 0) return null;
 
                 return (
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-start rounded-md gap-4 p-4 sm:p-8 border border-heat-40 bg-heat-8">
-                    <AlertCircle className="h-10 w-10 sm:h-16 sm:w-16 flex-shrink-0 text-heat-100" />
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-start rounded-md gap-6 p-8 border border-gray-200 bg-gray-100">
+                    <AlertCircle className="h-16 w-16 flex-shrink-0 text-orange-600" />
 
-                    <div className="text-body-small text-accent-black">
+                    <div className="text-body-medium text-accent-black">
                       <strong>{skippableEmails.length} emails</strong> from
                       common providers (Gmail, Yahoo, etc.) will be
                       automatically skipped to save API calls. These are
@@ -520,192 +532,194 @@ export function UnifiedEnrichmentView({
                   </div>
                 );
               })()}
-          </div>
+          </motion.div>
         )}
 
         {/* Email column info for step 2+ */}
         {step >= 2 && (
-          <div className="mb-8 flex items-center justify-between p-6 bg-heat-8 rounded-md border border-heat-40">
-            <div className="flex items-center gap-4">
-              <span className="text-label-medium text-accent-black">
-                Email Column:
-              </span>
-              <span className="font-mono text-mono-medium bg-white px-4 py-2 rounded-full border border-heat-40 text-heat-100">
-                {emailColumn}
-              </span>
+          <Card className="mb-8 p-6 bg-white border-gray-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-body-medium font-medium text-gray-900">
+                  Email Column:
+                </span>
+                <span className="text-body-medium bg-gray-50 px-4 py-2 rounded-md border border-gray-200 text-gray-700">
+                  {emailColumn}
+                </span>
+              </div>
+              {!showEmailDropdown && (
+                <button
+                  onClick={() => setShowEmailDropdown(true)}
+                  className="text-body-medium text-gray-600 hover:text-gray-900 transition-colors font-medium"
+                >
+                  Change
+                </button>
+              )}
+              {showEmailDropdown && (
+                <Select
+                  value={emailColumn}
+                  onValueChange={(value) => {
+                    setEmailColumn(value);
+                    setShowEmailDropdown(false);
+                  }}
+                >
+                  <SelectTrigger className="h-full w-[200px] bg-white">
+                    <SelectValue placeholder="Email Column" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-border-muted">
+                    {columns.map((col) => (
+                      <SelectItem
+                        key={col}
+                        value={col}
+                        className="text-body-medium"
+                      >
+                        {col}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
-            {!showEmailDropdown && (
-              <Button
-                variant="tertiary"
-                size="default"
-                onClick={() => setShowEmailDropdown(true)}
-                className="text-heat-100 hover:text-accent-crimson hover:bg-white/50 transition-all"
-              >
-                Change
-              </Button>
-            )}
-            {showEmailDropdown && (
-              <Select
-                value={emailColumn}
-                onValueChange={(value) => {
-                  setEmailColumn(value);
-                  setShowEmailDropdown(false);
-                }}
-              >
-                <SelectTrigger className="h-full w-[200px] bg-white">
-                  <SelectValue placeholder="Email Column" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-border-muted">
-                  {columns.map((col) => (
-                    <SelectItem
-                      key={col}
-                      value={col}
-                      className="text-body-medium"
-                    >
-                      {col}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
+          </Card>
         )}
 
         {/* Step 2: Field Selection */}
         {step === 2 && (
-          <div className="stack space-y-8">
-            <Card className="p-8 border-border-muted bg-white">
-              <div className="flex items-center justify-between mb-8">
-                <p className="text-accent-black">
-                  Select fields to enrich ({selectedFields.length}/10)
+          <motion.div
+            key="step-2"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="space-y-24"
+          >
+            {/* Header Section */}
+            <div className="flex items-start justify-between mb-16">
+              <div>
+                <h3 className="text-body-medium font-semibold text-gray-900 mb-4">
+                  Select fields to enrich
+                </h3>
+                <p className="text-body-medium text-gray-600">
+                  Choose up to 10 fields to add to your data
                 </p>
-                {/* Selected fields counter */}
-                {selectedFields.length > 0 && (
-                  <div className="text-body-small text-black-alpha-64">
-                    {selectedFields.length} field
-                    {selectedFields.length !== 1 ? "s" : ""} selected
-                  </div>
-                )}
               </div>
-
-              {/* Preset fields */}
-              <div className="stack space-y-6 mb-10">
-                <Label className="text-label-large font-medium text-accent-black p-2">
-                  Quick add fields
-                </Label>
-                <div className="flex flex-wrap gap-3">
-                  {PRESET_FIELDS.map((field) => {
-                    const isSelected = selectedFields.find(
-                      (f) => f.name === field.name,
-                    );
-                    return (
-                      <button
-                        key={field.name}
-                        disabled={selectedFields.length >= 10 && !isSelected}
-                        onClick={() =>
-                          isSelected
-                            ? handleRemoveField(field.name)
-                            : handleAddField(field)
-                        }
-                        className={cn(
-                          "p-4 text-body-small rounded-full transition-all duration-200 font-medium border",
-                          isSelected
-                            ? "bg-accent-black text-white selected"
-                            : "bg-background-lighter text-accent-black hover:bg-heat-8",
-                          selectedFields.length >= 10 &&
-                            !isSelected &&
-                            "opacity-50 cursor-not-allowed",
-                        )}
-                      >
-                        <span className="flex items-center gap-2 px-4">
-                          {field.displayName}
-                          {isSelected && <X size={14} />}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="flex items-center gap-2 px-12 py-8 bg-gray-100 rounded-full">
+                <span className="text-body-medium font-semibold text-gray-900">
+                  {selectedFields.length} / 10
+                </span>
               </div>
+            </div>
 
-              {/* Add additional fields section */}
-              <div className="border-t border-border-muted pt-10">
-                <Label className="mb-8 block text-title-h5 font-medium text-accent-black">
-                  Add additional fields
-                </Label>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Natural Language Card */}
-                  <Card className="p-6 border-heat-40 hover:border-heat-100 transition-all duration-300 bg-background-lighter">
-                    <Button
-                      variant="secondary"
-                      className="w-full justify-between p-0 bg-transparent"
+            {/* Preset fields */}
+            <Card className="p-16 border-gray-200 bg-white rounded-8">
+              <Label className="text-body-medium font-semibold text-gray-900 mb-12 block">
+                Quick add fields
+              </Label>
+              <div className="flex flex-wrap gap-6">
+                {PRESET_FIELDS.map((field) => {
+                  const isSelected = selectedFields.find(
+                    (f) => f.name === field.name,
+                  );
+                  return (
+                    <button
+                      key={field.name}
+                      disabled={selectedFields.length >= 10 && !isSelected}
                       onClick={() =>
-                        setShowNaturalLanguage(!showNaturalLanguage)
+                        isSelected
+                          ? handleRemoveField(field.name)
+                          : handleAddField(field)
                       }
-                    >
-                      <span className="flex items-center gap-3 font-medium text-label-large text-accent-black">
-                        <Sparkles size={16} className="text-heat-100" />
-                        Add with natural language
-                      </span>
-                      {showNaturalLanguage ? (
-                        <ChevronUp size={16} className="text-black-alpha-56" />
-                      ) : (
-                        <ChevronDown
-                          size={16}
-                          className="text-black-alpha-56"
-                        />
+                      className={cn(
+                        "rounded-6 px-6 py-4 text-body-medium transition-colors flex items-center gap-2",
+                        isSelected
+                          ? "bg-gray-900 text-white hover:bg-gray-800"
+                          : "text-accent-black bg-black-alpha-4 hover:bg-black-alpha-6",
+                        selectedFields.length >= 10 &&
+                          !isSelected &&
+                          "opacity-50 cursor-not-allowed",
                       )}
-                    </Button>
+                    >
+                      {field.displayName}
+                      {isSelected && <X size={14} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
 
-                    {showNaturalLanguage && (
-                      <div className="mt-4 stack space-y-4">
+            {/* Add additional fields section */}
+            <Card className="p-16 border-gray-200 bg-white rounded-8">
+              <Label className="mb-12 block text-body-medium font-semibold text-gray-900">
+                Add additional fields
+              </Label>
+
+              <div className="space-y-8">
+                {/* Natural Language Card */}
+                <div className="border rounded-6 border-gray-200 bg-gray-50">
+                  <button
+                    onClick={() =>
+                      setShowNaturalLanguage(!showNaturalLanguage)
+                    }
+                    className="w-full flex items-center justify-between p-12 text-left transition-colors hover:bg-gray-100"
+                  >
+                    <span className="flex items-center gap-6 font-medium text-body-medium text-gray-900">
+                      Add with natural language
+                    </span>
+                    {showNaturalLanguage ? (
+                      <ChevronUp size={14} className="text-gray-600" />
+                    ) : (
+                      <ChevronDown size={14} className="text-gray-600" />
+                    )}
+                  </button>
+
+                  {showNaturalLanguage && (
+                    <div className="px-12 pb-12 space-y-8 border-t border-gray-200">
+                      <div className="pt-12">
                         <Textarea
-                          placeholder="Describe the fields you want to add (e.g., 'I need the CEO name, company mission statement, and main product categories')"
+                          placeholder="e.g., 'CEO name, company mission statement, main product categories'"
                           value={naturalLanguageInput}
                           onChange={(e) =>
                             setNaturalLanguageInput(e.target.value)
                           }
                           rows={3}
-                          className="border-heat-40 focus:border-heat-100 bg-white text-body-medium h-72"
+                          className="border-gray-200 focus:border-gray-400 bg-white text-body-small resize-none"
                         />
-                        <Button
+                      </div>
+                      <div className="flex justify-end">
+                        <button
                           onClick={handleGenerateFields}
                           disabled={
                             !naturalLanguageInput.trim() || isGenerating
                           }
-                          variant="primary"
-                          className="w-full button button-primary text-label-medium"
+                          className="rounded-8 px-10 py-6 gap-4 text-body-medium text-accent-black bg-black-alpha-4 hover:bg-black-alpha-6 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <span className="button-background" />
                           {isGenerating ? "Generating..." : "Generate Fields"}
-                        </Button>
+                        </button>
                       </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Manual Add Card */}
+                <div className="border rounded-6 border-gray-200 bg-gray-50">
+                  <button
+                    onClick={() => setShowManualAdd(!showManualAdd)}
+                    className="w-full flex items-center justify-between p-12 text-left transition-colors hover:bg-gray-100"
+                  >
+                    <span className="flex items-center gap-6 font-medium text-body-medium text-gray-900">
+                      <Plus size={14} className="text-gray-600" />
+                      Add manually
+                    </span>
+                    {showManualAdd ? (
+                      <ChevronUp size={14} className="text-gray-600" />
+                    ) : (
+                      <ChevronDown size={14} className="text-gray-600" />
                     )}
-                  </Card>
+                  </button>
 
-                  {/* Manual Add Card */}
-                  <Card className="p-6 border-heat-40 hover:border-heat-100 transition-all duration-300 bg-background-lighter">
-                    <Button
-                      variant="secondary"
-                      className="w-full justify-between p-0 bg-transparent"
-                      onClick={() => setShowManualAdd(!showManualAdd)}
-                    >
-                      <span className="flex items-center gap-3 font-medium text-label-large text-accent-black">
-                        <Plus size={16} className="text-heat-100" />
-                        Add manually
-                      </span>
-                      {showManualAdd ? (
-                        <ChevronUp size={16} className="text-black-alpha-56" />
-                      ) : (
-                        <ChevronDown
-                          size={16}
-                          className="text-black-alpha-56"
-                        />
-                      )}
-                    </Button>
-
-                    {showManualAdd && (
-                      <div className="mt-6 stack space-y-4">
+                  {showManualAdd && (
+                    <div className="px-12 pb-12 space-y-8 border-t border-gray-200">
+                      <div className="pt-12 space-y-8">
                         <Input
                           placeholder="Field name"
                           value={customField.name}
@@ -715,7 +729,7 @@ export function UnifiedEnrichmentView({
                               name: e.target.value,
                             })
                           }
-                          className="w-full border-heat-40 focus:border-heat-100 bg-white text-body-medium"
+                          className="w-full border-gray-200 focus:border-gray-400 bg-white text-body-small h-32"
                         />
                         <Textarea
                           placeholder="Field description"
@@ -727,7 +741,7 @@ export function UnifiedEnrichmentView({
                             })
                           }
                           rows={2}
-                          className="w-full border-heat-40 focus:border-heat-100 bg-white text-body-medium"
+                          className="w-full border-gray-200 focus:border-gray-400 bg-white text-body-small resize-none"
                         />
                         <Select
                           value={customField.type}
@@ -735,123 +749,115 @@ export function UnifiedEnrichmentView({
                             value: "string" | "number" | "boolean" | "array",
                           ) => setCustomField({ ...customField, type: value })}
                         >
-                          <SelectTrigger className="w-full h-32 border-heat-40 focus:border-heat-100">
-                            <SelectValue
-                              className="text-body-medium"
-                              placeholder="Select Type"
-                            />
+                          <SelectTrigger className="w-full h-32 border-gray-200 focus:border-gray-400 text-body-small">
+                            <SelectValue placeholder="Text" />
                           </SelectTrigger>
-                          <SelectContent className="bg-white border-border-muted">
-                            <SelectItem
-                              value="string"
-                              className="text-body-medium"
-                            >
+                          <SelectContent className="bg-white border-gray-200 z-50">
+                            <SelectItem value="string" className="text-body-small">
                               Text
                             </SelectItem>
-                            <SelectItem
-                              value="number"
-                              className="text-body-medium"
-                            >
+                            <SelectItem value="number" className="text-body-small">
                               Number
                             </SelectItem>
-                            <SelectItem
-                              value="boolean"
-                              className="text-body-medium"
-                            >
+                            <SelectItem value="boolean" className="text-body-small">
                               Boolean
                             </SelectItem>
-                            <SelectItem
-                              value="array"
-                              className="text-body-medium"
-                            >
+                            <SelectItem value="array" className="text-body-small">
                               List
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                        <Button
-                          onClick={handleAddCustomField}
-                          variant="primary"
-                          className="w-full button button-primary text-label-medium"
-                        >
-                          <span className="button-background" />
-                          Add Field
-                        </Button>
                       </div>
-                    )}
-                  </Card>
+                      <div className="flex justify-end">
+                        <button
+                          onClick={handleAddCustomField}
+                          disabled={!customField.name || !customField.description}
+                          className="rounded-8 px-10 py-6 gap-4 text-body-medium text-accent-black bg-black-alpha-4 hover:bg-black-alpha-6 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Add Field
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+            </Card>
 
-              {/* Suggested fields */}
-              {suggestedFields.length > 0 && (
-                <div className="mt-8 stack space-y-4">
-                  <Label className="text-label-large font-medium text-accent-black">
-                    Suggested fields
-                  </Label>
+            {/* Suggested fields */}
+            {suggestedFields.length > 0 && (
+              <Card className="p-16 border-gray-200 bg-white rounded-8">
+                <Label className="text-body-medium font-semibold text-gray-900 mb-12 block">
+                  Suggested fields
+                </Label>
+                <div className="space-y-8">
                   {suggestedFields.map((field, idx) => (
-                    <Card
+                    <div
                       key={idx}
-                      className="p-6 border-border-muted bg-background-lighter suggested-field-card"
+                      className="p-12 border border-gray-200 bg-gray-50 rounded-6 suggested-field-card"
                       style={{
                         animationDelay: `${idx * 100}ms`,
                         animationFillMode: "backwards",
                       }}
                     >
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-start gap-12">
                         <div className="flex-1">
-                          <p className="font-medium text-label-medium text-accent-black">
+                          <p className="font-medium text-body-medium text-gray-900">
                             {field.displayName}
                           </p>
-                          <p className="text-body-small text-black-alpha-64 mt-1">
+                          <p className="text-body-medium text-gray-600 mt-2">
                             {field.description}
                           </p>
                         </div>
-                        <div className="flex gap-3 ml-6">
-                          <Button
-                            size="default"
-                            variant="primary"
+                        <div className="flex gap-6 flex-shrink-0">
+                          <button
                             onClick={() => {
                               handleAddField(field);
                               setSuggestedFields(
                                 suggestedFields.filter((_, i) => i !== idx),
                               );
                             }}
-                            className="button button-primary"
+                            className="px-12 py-6 bg-gray-900 text-white text-body-medium rounded-6 hover:bg-gray-800 transition-colors font-medium whitespace-nowrap"
                           >
-                            <span className="button-background" />
                             Accept
-                          </Button>
-                          <Button
-                            size="default"
-                            className="bg-accent-black text-white hover:bg-black-alpha-72"
+                          </button>
+                          <button
                             onClick={() =>
                               setSuggestedFields(
                                 suggestedFields.filter((_, i) => i !== idx),
                               )
                             }
+                            className="px-12 py-6 bg-white border border-gray-200 text-gray-700 text-body-medium rounded-6 hover:bg-gray-50 transition-colors font-medium whitespace-nowrap"
                           >
                             Reject
-                          </Button>
+                          </button>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   ))}
                 </div>
-              )}
+              </Card>
+            )}
 
-              <Button
-                variant="primary"
-                size="large"
-                className="w-full mt-10"
+            {/* Navigation Buttons */}
+            <div className="flex justify-between pt-16">
+              <button
+                onClick={() => setStep(1)}
+                className="rounded-8 px-10 py-6 gap-4 text-body-medium text-accent-black bg-black-alpha-4 hover:bg-black-alpha-6 transition-colors flex items-center"
+              >
+                <ArrowLeft style={{ width: '20px', height: '20px' }} />
+                Back
+              </button>
+              <button
                 onClick={() => onStartEnrichment(emailColumn, selectedFields)}
                 disabled={selectedFields.length === 0}
+                className="rounded-8 px-10 py-6 gap-4 text-body-medium text-accent-black bg-black-alpha-4 hover:bg-black-alpha-6 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Sparkles className="w-16 h-16" />
                 Start Enrichment
-              </Button>
-            </Card>
-          </div>
+              </button>
+            </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -52,7 +52,7 @@ export function SlateGrid({
       <div className="absolute inset-0 flex items-center justify-center">
         <div
           ref={ref}
-          className={cn("font-mono fc-decoration", color)}
+          className={cn("fc-decoration", color)}
           style={{
             whiteSpace: "pre",
             fontSize: "10px",

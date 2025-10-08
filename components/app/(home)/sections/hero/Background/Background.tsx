@@ -11,7 +11,7 @@ export default function HomeHeroBackground() {
     <div className="overlay contain-layout pointer-events-none lg-max:hidden">
       <div className="top-100 h-[calc(100%-99px)] border-border-faint border-y w-full left-0 absolute" />
       <div className="cw-[1314px] z-[45] absolute top-0 border-x border-border-faint h-full">
-        <div className="text-mono-x-small font-mono text-black-alpha-12 select-none">
+        <div className="text-mono-x-small text-black-alpha-12 select-none">
           <div className="absolute top-111 -left-1 w-102 text-center">
             {" "}
             [ 200 OK ]{" "}

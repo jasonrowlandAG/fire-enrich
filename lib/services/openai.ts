@@ -333,7 +333,8 @@ DOMAIN PARKING/SALE PAGES:
   async extractStructuredDataWithCorroboration(
     content: string,
     fields: EnrichmentField[],
-    context: Record<string, string>
+    context: Record<string, string>,
+    onMessage?: (message: string, type: 'info' | 'success' | 'warning' | 'agent', sourceUrl?: string) => void
   ): Promise<Record<string, EnrichmentResult>> {
     try {
       console.log('Starting corroborated extraction for fields:', fields.map(f => f.name));
@@ -646,9 +647,20 @@ REMEMBER: Extract exact_text from the "=== ACTUAL CONTENT BELOW ===" section, NO
             
             // Debug log what we're keeping
             if (validSourceContext.length > 0) {
-              console.log(`[SOURCE-CONTEXT] For ${field.name}, keeping ${validSourceContext.length} sources:`, 
+              console.log(`[SOURCE-CONTEXT] For ${field.name}, keeping ${validSourceContext.length} sources:`,
                 validSourceContext.map(sc => ({ url: sc.url, snippet: sc.snippet.substring(0, 50) + '...' }))
               );
+
+              // Send source context to UI
+              if (onMessage) {
+                validSourceContext.forEach((sc, idx) => {
+                  onMessage(
+                    `Found evidence for ${field.displayName || field.name}: "${sc.snippet.substring(0, 100)}..."`,
+                    'info',
+                    sc.url
+                  );
+                });
+              }
             }
             
             // Final validation - if all snippets look like titles, clear them
@@ -854,6 +866,218 @@ Generate new search queries to find: ${targetField}`,
     } catch (error) {
       console.error('Query generation error:', error);
       return [];
+    }
+  }
+
+  async generateSearchQuery(question: string, context?: Record<string, unknown>): Promise<string> {
+    try {
+      const conversationHistory = (context?.conversationHistory as Array<{ role: string; content: string }>) || [];
+      const currentDate = new Date().toISOString().split('T')[0];
+
+      const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+        {
+          role: 'system',
+          content: `You are a search query optimizer. Convert natural language questions into effective search queries.
+
+**Current date: ${currentDate}**
+
+If the question is about recent/current data (funding, metrics, etc.), include the current year (${new Date().getFullYear()}) in the search query to get the most up-to-date results.
+
+If the question references previous context (like "when was that"), use the conversation history to understand what the user is asking about.
+
+Return ONLY the search query, nothing else.`
+        }
+      ];
+
+      // Add conversation history for context
+      if (conversationHistory.length > 0) {
+        messages.push({
+          role: 'system',
+          content: `Previous conversation:\n${conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}`
+        });
+      }
+
+      messages.push({
+        role: 'user',
+        content: `Question: ${question}\n\nContext: ${JSON.stringify(context || {})}\n\nGenerate the best search query:`
+      });
+
+      const response = await this.client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages,
+        temperature: 0.3,
+        max_tokens: 100,
+      });
+
+      return response.choices[0].message.content?.trim() || question;
+    } catch (error) {
+      console.error('Search query generation error:', error);
+      return question;
+    }
+  }
+
+  async answerFromTableData(
+    question: string,
+    tableData: string,
+    conversationHistory?: Array<{ role: string; content: string }>
+  ): Promise<{ found: boolean; answer?: string }> {
+    try {
+      const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+        {
+          role: 'system',
+          content: `You are a data analyst examining enriched table data. Your job is to answer questions ONLY if the specific information is present in the data.
+
+**CRITICAL RULES**:
+1. ONLY answer if the EXACT information requested is in the table data
+2. If the table has related data but NOT the specific field asked about, return "NOT_FOUND"
+3. If asked about a field that doesn't exist in the data, return "NOT_FOUND"
+4. Be precise - don't guess or make assumptions
+
+**Examples**:
+- Question: "How much funding has X raised?" → If table has name/company but NO funding field, return "NOT_FOUND"
+- Question: "What is the employee count?" → If table has employeeCount field with value, answer with that value
+- Question: "What is their revenue?" → If table has NO revenue field, return "NOT_FOUND"
+
+When you CAN answer:
+- Be concise and specific
+- Cite the actual data points
+- If multiple rows match, aggregate the information
+
+When you CANNOT answer:
+- Respond with EXACTLY "NOT_FOUND" (nothing else)`
+        }
+      ];
+
+      // Add conversation history for context
+      if (conversationHistory && conversationHistory.length > 0) {
+        conversationHistory.forEach(msg => {
+          messages.push({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content
+          });
+        });
+      }
+
+      messages.push({
+        role: 'user',
+        content: `Current Date: ${new Date().toISOString().split('T')[0]}
+
+Enriched Data Table:
+${tableData}
+
+Question: ${question}
+
+**IMPORTANT**:
+- DO NOT just describe the table or say how many rows it has
+- ONLY answer if the SPECIFIC data requested exists in the table
+- If the specific field is not in the table, return "NOT_FOUND"
+- Be specific with your answer, citing actual data values`
+      });
+
+      const response = await this.client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages,
+        temperature: 0.1, // Lower temperature for more consistent behavior
+        max_tokens: 500,
+      });
+
+      const answer = response.choices[0].message.content?.trim() || '';
+
+      // Check for NOT_FOUND or generic table descriptions
+      const isGenericAnswer =
+        answer === 'NOT_FOUND' ||
+        answer.includes('NOT_FOUND') ||
+        (answer.toLowerCase().includes('table contains') && answer.toLowerCase().includes('rows')) ||
+        (answer.toLowerCase().includes('total') && answer.toLowerCase().includes('rows') && answer.split(' ').length < 15);
+
+      if (isGenericAnswer) {
+        console.log('[OPENAI] Table data check: NOT_FOUND (generic or not found)');
+        return { found: false };
+      }
+
+      console.log('[OPENAI] Table data check: FOUND -', answer.substring(0, 100));
+      return { found: true, answer };
+    } catch (error) {
+      console.error('Table data analysis error:', error);
+      return { found: false };
+    }
+  }
+
+  async selectBestSource(
+    sources: Array<{ url: string; title?: string; description?: string }>,
+    question: string
+  ): Promise<{ url: string; title?: string }> {
+    try {
+      const response = await this.client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a source evaluator. Select the best source to answer the question. Return JSON with {index: number}.'
+          },
+          {
+            role: 'user',
+            content: `Question: ${question}\n\nSources:\n${sources.map((s, i) => `${i}. ${s.title || s.url}\n${s.description || ''}`).join('\n\n')}\n\nSelect best source:`
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 50,
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{"index": 0}');
+      return sources[result.index] || sources[0];
+    } catch (error) {
+      console.error('Source selection error:', error);
+      return sources[0];
+    }
+  }
+
+  async generateConversationalResponse(
+    question: string,
+    content: string,
+    context?: Record<string, unknown>,
+    sourceUrl?: string
+  ): Promise<string> {
+    try {
+      const conversationHistory = (context?.conversationHistory as Array<{ role: string; content: string }>) || [];
+      const currentDate = new Date().toISOString().split('T')[0];
+
+      const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+        {
+          role: 'system',
+          content: `You are a helpful research assistant. Answer questions conversationally based on the provided content and previous conversation context.
+
+**Current date: ${currentDate}**
+
+Be concise but informative. If the content doesn't contain the answer, say so. When citing dates or time-sensitive information, consider the current date for context.`
+        }
+      ];
+
+      // Add conversation history for context
+      conversationHistory.forEach(msg => {
+        messages.push({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content
+        });
+      });
+
+      // Add current question with content
+      messages.push({
+        role: 'user',
+        content: `Question: ${question}\n\nContext: ${JSON.stringify(context || {})}\n\nContent from ${sourceUrl || 'source'}:\n${content.slice(0, 8000)}\n\nAnswer:`
+      });
+
+      const response = await this.client.chat.completions.create({
+        model: 'gpt-4o',
+        messages,
+        temperature: 0.7,
+        max_tokens: 500,
+      });
+
+      return response.choices[0].message.content?.trim() || "I couldn't find a clear answer to your question.";
+    } catch (error) {
+      console.error('Response generation error:', error);
+      return "I encountered an error while processing your question.";
     }
   }
 }

@@ -101,7 +101,6 @@ a:hover {
 
 /* Code blocks */
 code {
-  font-family: var(--font-mono);
   font-size: 0.875em;
   background-color: var(--black-alpha-4);
   padding: 0.125rem 0.25rem;

@@ -189,13 +189,13 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
   return (
     <div className="space-y-2">
       <div>
-        <h3 className="text-sm font-semibold mb-2">
+        <h3 className="text-body-small font-semibold mb-2">
           Select fields to enrich (max 10)
         </h3>
 
         {/* Preset fields */}
         <div className="mb-2">
-          <p className="text-xs text-gray-600 mb-1">Quick add fields:</p>
+          <p className="text-body-x-small text-gray-600 mb-1">Quick add fields:</p>
           <div className="flex flex-wrap gap-1.5">
             {PRESET_FIELDS.map((preset) => {
               const isSelected =
@@ -207,7 +207,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
                   key={preset.displayName}
                   onClick={() => addField(preset)}
                   disabled={isSelected}
-                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-body-x-small font-medium transition-all ${
                     isSelected
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-orange-100 text-orange-900 hover:bg-orange-200"
@@ -237,7 +237,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
         {showSuggestions && suggestedFields.length > 0 && (
           <div className="mb-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-semibold text-gray-900">
+              <h4 className="text-body-small font-semibold text-gray-900">
                 Suggested Fields
               </h4>
               <div className="flex gap-2">
@@ -248,7 +248,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
                   }}
                   variant="outline"
                   size="sm"
-                  className="h-7 px-3 text-xs border-gray-300 hover:bg-gray-100"
+                  className="h-7 px-3 text-body-x-small border-gray-300 hover:bg-gray-100"
                 >
                   Cancel All
                 </Button>
@@ -256,7 +256,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
                   onClick={acceptSuggestedFields}
                   variant="orange"
                   size="sm"
-                  className="h-7 px-3 text-xs"
+                  className="h-7 px-3 text-body-x-small"
                 >
                   Accept All
                 </Button>
@@ -270,10 +270,10 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
                 >
                   <div className="flex items-start gap-2">
                     <div className="flex-1">
-                      <div className="font-medium text-sm text-gray-900">
+                      <div className="font-medium text-body-small text-gray-900">
                         {field.displayName}
                       </div>
-                      <div className="text-xs text-gray-600 mt-0.5">
+                      <div className="text-body-x-small text-gray-600 mt-0.5">
                         {field.description}
                       </div>
                     </div>
@@ -356,14 +356,14 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
 
       {/* Selected fields */}
       <div className="mt-2">
-        <h4 className="text-xs font-medium mb-1">
+        <h4 className="text-body-x-small font-medium mb-1">
           Selected fields ({selectedFields.length}/10):
         </h4>
         <div className="flex flex-wrap gap-1.5">
           {selectedFields.map((field) => (
             <div
               key={field.name}
-              className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-black text-white group"
+              className="inline-flex items-center px-2.5 py-1 rounded-full text-body-x-small font-medium bg-black text-white group"
             >
               <span title={field.description}>{field.displayName}</span>
               <button
@@ -392,7 +392,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
         <div className="border-t pt-2">
           {/* Natural Language Input */}
           <div className="mb-2">
-            <p className="text-xs text-gray-600 mb-1">
+            <p className="text-body-x-small text-gray-600 mb-1">
               Describe fields you want to collect:
             </p>
             <div className="flex gap-1">
@@ -403,7 +403,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
                 onClick={() => setNlPrompt("")}
                 onKeyDown={(e) => e.key === "Enter" && generateFieldsFromNL()}
                 placeholder="e.g., I want company bio, size, recent fundraising"
-                className="flex-1 h-8 text-xs"
+                className="flex-1 h-8 text-body-x-small"
                 disabled={isGenerating}
               />
               <Button
@@ -429,7 +429,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
           </div>
 
           {/* Custom field */}
-          <p className="text-xs text-gray-600 mb-1">Or add custom field:</p>
+          <p className="text-body-x-small text-gray-600 mb-1">Or add custom field:</p>
           <div className="grid grid-cols-3 gap-1">
             <Input
               type="text"
@@ -441,7 +441,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
               onClick={() =>
                 setCustomField({ ...customField, displayName: "" })
               }
-              className="h-8 text-xs"
+              className="h-8 text-body-x-small"
             />
             <Input
               type="text"
@@ -453,7 +453,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
               onClick={() =>
                 setCustomField({ ...customField, description: "" })
               }
-              className="h-8 text-xs"
+              className="h-8 text-body-x-small"
             />
             <div className="flex gap-1">
               <Select
@@ -465,7 +465,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
                   })
                 }
               >
-                <SelectTrigger className="h-8 text-xs flex-1">
+                <SelectTrigger className="h-8 text-body-x-small flex-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
