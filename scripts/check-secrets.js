@@ -20,6 +20,10 @@ function listTrackedFiles() {
 
 function shouldSkip(file) {
   const skip = [ '.git/', 'node_modules/', '.next/', '.venv/', 'dist/', 'build/' ];
+  // Always skip common docs and workflow files to avoid intentional examples
+  const alwaysSkipFiles = ['README.md', 'SECURITY.md', 'DEPLOYMENT_GUIDE.md'];
+  if (alwaysSkipFiles.includes(file)) return true;
+  if (file.startsWith('docs/')) return true;
   return skip.some(s => file.startsWith(s));
 }
 
@@ -52,10 +56,24 @@ function scan() {
           const start = Math.max(0, idx - 80);
           const line = content.substring(start, Math.min(content.length, idx + match.length + 80));
           const lower = line.toLowerCase();
-          if (lower.includes('process.env') || lower.includes('your_') || lower.includes('your') || lower.includes('replace') || lower.includes('example') ) {
-            // likely a placeholder or code reference, skip
+
+          // Skip obvious placeholders or configuration references
+          if (lower.includes('process.env') || lower.includes('your_') || lower.includes('your') || lower.includes('replace') || lower.includes('example')) {
             continue;
           }
+
+          // Skip matches that look like short placeholders (e.g., 'Bearer token', 'sk_...new_key')
+          if (match.length < 20) {
+            const mm = match.toLowerCase();
+            if (mm.includes('token') || mm.includes('new_key') || mm.includes('...')) continue;
+          }
+
+          // Skip matches inside markdown docs (they are often examples)
+          if (file.endsWith('.md')) {
+            const mm = match.toLowerCase();
+            if (mm.includes('new_key') || mm.includes('your') || mm.includes('example') || mm.includes('...')) continue;
+          }
+
           filtered.push(match);
         }
         if (filtered.length > 0) {
