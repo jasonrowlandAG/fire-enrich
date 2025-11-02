@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Simple pre-commit hook wrapper that runs the Node secret scanner
+echo "Running secret scan..."
+node ./scripts/check-secrets.js
+RC=$?
+if [ $RC -ne 0 ]; then
+  echo "Pre-commit secret scan failed. Fix leaks or override if intentional." >&2
+  exit $RC
+fi
+echo "Secret scan passed."
+exit 0
