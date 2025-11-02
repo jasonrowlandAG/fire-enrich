@@ -93,6 +93,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
   });
   const [nlPrompt, setNlPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [nlError, setNlError] = useState<string | null>(null);
   const [suggestedFields, setSuggestedFields] = useState<FieldDefinitionType[]>(
     [],
   );
@@ -147,6 +148,7 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
     if (!nlPrompt.trim()) return;
 
     setIsGenerating(true);
+    setNlError(null);
     try {
       const response = await fetch("/api/generate-fields", {
         method: "POST",
@@ -154,13 +156,26 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
         body: JSON.stringify({ prompt: nlPrompt }),
       });
 
+      // If API returned a non-OK status, try to surface error details
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        const message = err?.error || err?.message || `Error ${response.status}`;
+        setNlError(message);
+        return;
+      }
+
       const result = await response.json();
-      if (result.success && result.data.fields) {
+      if (result.success && result.data?.fields) {
         setSuggestedFields(result.data.fields);
         setShowSuggestions(true);
+        setNlError(null);
+      } else {
+        const message = result?.error || "Invalid response format";
+        setNlError(message);
       }
     } catch (error) {
       console.error("Failed to generate fields:", error);
+      setNlError(error?.message ?? "Failed to generate fields");
     } finally {
       setIsGenerating(false);
     }
@@ -406,6 +421,12 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
                 className="flex-1 h-8 text-body-x-small"
                 disabled={isGenerating}
               />
+              {/* Natural language error message */}
+              {nlError && (
+                <div className="text-rose-600 text-body-x-small mt-1 mr-2">
+                  {nlError}
+                </div>
+              )}
               <Button
                 onClick={generateFieldsFromNL}
                 disabled={isGenerating || !nlPrompt.trim()}

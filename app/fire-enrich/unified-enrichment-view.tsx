@@ -114,6 +114,7 @@ export function UnifiedEnrichmentView({
   const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
   const [suggestedFields, setSuggestedFields] = useState<EnrichmentField[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [naturalLanguageError, setNaturalLanguageError] = useState<string | null>(null);
   const [showAllRows, setShowAllRows] = useState(false);
   const [showEmailDropdown, setShowEmailDropdown] = useState(false);
   const [showEmailDropdownStep1, setShowEmailDropdownStep1] = useState(false);
@@ -165,14 +166,20 @@ export function UnifiedEnrichmentView({
     if (!naturalLanguageInput.trim()) return;
 
     setIsGenerating(true);
+    setNaturalLanguageError(null);
     try {
       const response = await fetch("/api/generate-fields", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: naturalLanguageInput }),
       });
-
-      if (!response.ok) throw new Error("Failed to generate fields");
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        const message = err?.error || err?.message || `Error ${response.status}`;
+        setNaturalLanguageError(message);
+        toast.error(message);
+        return;
+      }
 
       const result = await response.json();
 
@@ -201,14 +208,19 @@ export function UnifiedEnrichmentView({
         );
         setSuggestedFields(convertedFields);
       } else {
-        throw new Error("Invalid response format");
+        const message = result?.error || "Invalid response format";
+        setNaturalLanguageError(message);
+        toast.error(message);
+        return;
       }
 
       setShowNaturalLanguage(false);
       setNaturalLanguageInput("");
     } catch (error) {
       console.error("Error generating fields:", error);
-      toast.error("Failed to generate fields. Please try again.");
+      const msg = (error as any)?.message ?? "Failed to generate fields. Please try again.";
+      setNaturalLanguageError(msg);
+      toast.error(msg);
     } finally {
       setIsGenerating(false);
     }
@@ -684,6 +696,11 @@ export function UnifiedEnrichmentView({
                           rows={3}
                           className="border-gray-200 focus:border-gray-400 bg-white text-body-small resize-none"
                         />
+                          {naturalLanguageError && (
+                            <div className="mt-3 text-rose-600 text-body-small">
+                              {naturalLanguageError}
+                            </div>
+                          )}
                       </div>
                       <div className="flex justify-end">
                         <button
