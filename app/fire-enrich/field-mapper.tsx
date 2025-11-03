@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EnrichmentField } from "@/lib/types";
 import { generateVariableName } from "@/lib/utils/field-utils";
 import { FieldDefinitionType } from "@/lib/types/field-generation";
@@ -98,6 +98,48 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
     [],
   );
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
+
+  const FIELDMAPPER_LS_KEY = "fire-enrich:field-mapper:fields.csv";
+
+  const fieldsToCSV = (fields: EnrichmentField[]) => {
+    const headers = ["name", "displayName", "description", "type", "required"];
+    const escape = (v: any) => {
+      if (v === null || v === undefined) return "";
+      const s = String(v);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const rows = fields.map((f) =>
+      [f.name, f.displayName, f.description, f.type, f.required].map(escape).join(","),
+    );
+    return [headers.join(","), ...rows].join("\n");
+  };
+
+  useEffect(() => {
+    // Autosave selected fields to localStorage as CSV
+    try {
+      setSaveStatus("saving");
+      const csv = fieldsToCSV(selectedFields);
+      localStorage.setItem(FIELDMAPPER_LS_KEY, csv);
+      setSaveStatus("saved");
+    } catch (err) {
+      console.error("Autosave failed:", err);
+      setSaveStatus("error");
+    }
+  }, [selectedFields]);
+
+  const downloadCSV = () => {
+    const csv = fieldsToCSV(selectedFields);
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "field-mapper-fields.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
 
   const addField = (preset: Omit<EnrichmentField, "name">) => {
     const existingNames = selectedFields.map((f) => f.name);
@@ -508,6 +550,20 @@ export function FieldMapper({ onFieldsSelected }: FieldMapperProps) {
           </div>
         </div>
       )}
+
+      <div className="flex items-center justify-between mt-3 mb-2">
+        <div className="text-body-x-small text-gray-600">
+          Autosave: 
+          <span className={`ml-1 font-medium ${saveStatus === 'saved' ? 'text-green-600' : saveStatus === 'saving' ? 'text-gray-600' : 'text-rose-600'}`}>
+            {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving…' : 'Error'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={downloadCSV} variant="outline" size="sm">
+            Download CSV
+          </Button>
+        </div>
+      </div>
 
       <Button
         onClick={handleProceed}

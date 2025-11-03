@@ -115,6 +115,47 @@ export function UnifiedEnrichmentView({
   const [suggestedFields, setSuggestedFields] = useState<EnrichmentField[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [naturalLanguageError, setNaturalLanguageError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
+
+  const UNIFIED_LS_KEY = "fire-enrich:unified:selected-fields.csv";
+
+  const fieldsToCSV = (fields: EnrichmentField[], emailCol?: string) => {
+    const headers = ["name", "displayName", "description", "type", "required", "emailColumn"];
+    const escape = (v: any) => {
+      if (v === null || v === undefined) return "";
+      const s = String(v);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const rows = fields.map((f) =>
+      [f.name, f.displayName, f.description, f.type, f.required, emailCol || ""].map(escape).join(","),
+    );
+    return [headers.join(","), ...rows].join("\n");
+  };
+
+  useEffect(() => {
+    try {
+      setSaveStatus("saving");
+      const csv = fieldsToCSV(selectedFields, emailColumn);
+      localStorage.setItem(UNIFIED_LS_KEY, csv);
+      setSaveStatus("saved");
+    } catch (err) {
+      console.error("Autosave failed:", err);
+      setSaveStatus("error");
+    }
+  }, [selectedFields, emailColumn]);
+
+  const downloadCSV = () => {
+    const csv = fieldsToCSV(selectedFields, emailColumn);
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "unified-selected-fields.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
   const [showAllRows, setShowAllRows] = useState(false);
   const [showEmailDropdown, setShowEmailDropdown] = useState(false);
   const [showEmailDropdownStep1, setShowEmailDropdownStep1] = useState(false);
@@ -615,10 +656,23 @@ export function UnifiedEnrichmentView({
                   Choose up to 10 fields to add to your data
                 </p>
               </div>
-              <div className="flex items-center gap-2 px-12 py-8 bg-gray-100 rounded-full">
-                <span className="text-body-medium font-semibold text-gray-900">
-                  {selectedFields.length} / 10
-                </span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 px-6 py-4 bg-gray-100 rounded-full">
+                  <span className="text-body-medium font-semibold text-gray-900">
+                    {selectedFields.length} / 10
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-body-small text-gray-600">
+                  <span>Autosave:</span>
+                  <span className={saveStatus === 'saved' ? 'text-green-600 font-medium' : saveStatus === 'saving' ? 'text-gray-600' : 'text-rose-600 font-medium'}>
+                    {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving…' : 'Error'}
+                  </span>
+                </div>
+                <div>
+                  <Button onClick={downloadCSV}>
+                    Download CSV
+                  </Button>
+                </div>
               </div>
             </div>
 
